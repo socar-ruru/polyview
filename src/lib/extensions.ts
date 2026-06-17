@@ -32,24 +32,28 @@ export function renderKindOf(path: string): RenderKind {
   return EXT_TO_KIND[extensionOf(path)] ?? 'raw'
 }
 
-// Maps file extensions to highlight.js language names. Values must match a
-// language registered in `highlight-client.ts` (e.g. tsx → typescript) so the
-// renderer can highlight directly instead of falling back to auto-detection.
-const HIGHLIGHT_LANG: Record<string, string> = {
+// Maps file extensions to Shiki language IDs. Values must match a grammar
+// registered in `highlight.ts`; unmapped extensions render as plain text.
+const SHIKI_LANG: Record<string, string> = {
   ts: 'typescript',
-  tsx: 'typescript',
+  mts: 'typescript',
+  cts: 'typescript',
+  tsx: 'tsx',
   js: 'javascript',
-  jsx: 'javascript',
+  mjs: 'javascript',
+  cjs: 'javascript',
+  jsx: 'jsx',
   json: 'json',
   yaml: 'yaml',
   yml: 'yaml',
   css: 'css',
   scss: 'scss',
-  html: 'xml',
-  htm: 'xml',
+  html: 'html',
+  htm: 'html',
   xml: 'xml',
   sh: 'bash',
   bash: 'bash',
+  zsh: 'bash',
   py: 'python',
   go: 'go',
   rs: 'rust',
@@ -59,12 +63,13 @@ const HIGHLIGHT_LANG: Record<string, string> = {
   sql: 'sql',
   md: 'markdown',
   markdown: 'markdown',
-  toml: 'ini',
+  toml: 'toml',
+  ini: 'ini',
 }
 
-/** Language hint for raw syntax highlighting, or undefined to auto-detect. */
-export function highlightLanguageOf(path: string): string | undefined {
-  return HIGHLIGHT_LANG[extensionOf(path)]
+/** Shiki language ID for a path, or undefined to render as plain text. */
+export function shikiLanguageOf(path: string): string | undefined {
+  return SHIKI_LANG[extensionOf(path)]
 }
 
 const IMAGE_MIME_TYPES: Record<string, string> = {

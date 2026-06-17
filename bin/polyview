@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# Visualize a local directory with Polyview.
+#
+#   polyview [DIR]            # DIR defaults to the current directory
+#   PORT=4000 polyview ~/x    # custom port
+#
+# Starts the Polyview dev server pointed (read-only) at DIR and opens a browser.
+# Press Ctrl-C to stop.
+#
+set -eo pipefail
+
+# Resolve this script's real location (so it works when symlinked onto PATH),
+# then derive the repo root one level up.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+REPO="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+
+ROOT="${1:-$PWD}"
+if [ ! -d "$ROOT" ]; then
+  echo "polyview: not a directory: $ROOT" >&2
+  exit 1
+fi
+ROOT="$(cd "$ROOT" && pwd)"
+PORT="${PORT:-3000}"
+URL="http://localhost:${PORT}/browse"
+
+cd "$REPO"
+
+# Prefer the Node version pinned in .nvmrc when nvm is installed (run from the
+# repo so nvm picks up ./.nvmrc).
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$NVM_DIR/nvm.sh"
+  nvm use >/dev/null 2>&1 || true
+fi
+
+if [ ! -d node_modules ]; then
+  echo "polyview: dependencies missing — run 'npm install' in $REPO first" >&2
+  exit 1
+fi
+
+echo "Polyview → $ROOT"
+echo "          $URL   (Ctrl-C to stop)"
+
+# Open the browser once the server is likely up (best-effort, non-fatal).
+(
+  for _ in $(seq 1 40); do
+    if curl -fsS -o /dev/null "http://localhost:${PORT}/" 2>/dev/null; then break; fi
+    sleep 0.5
+  done
+  if command -v open >/dev/null 2>&1; then open "$URL"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$URL"
+  fi
+) >/dev/null 2>&1 &
+
+export SOURCE_TYPE=local
+export LOCAL_ROOT="$ROOT"
+export PORT
+exec npm run dev

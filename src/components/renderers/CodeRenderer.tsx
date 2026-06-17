@@ -1,36 +1,26 @@
-'use client'
-
-import { useEffect, useRef } from 'react'
-import hljs from '@/lib/highlight-client'
-import 'highlight.js/styles/github.css'
-
-/** Raw source view with syntax highlighting (auto-detected when no language). */
-export function CodeRenderer({ code, language }: { code: string; language?: string }) {
-  const ref = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    // Reset so re-highlighting a re-used node doesn't throw.
-    el.removeAttribute('data-highlighted')
-    el.textContent = code
-    if (language && hljs.getLanguage(language)) {
-      el.className = `hljs language-${language}`
-      el.innerHTML = hljs.highlight(code, { language }).value
-    } else {
-      const result = hljs.highlightAuto(code)
-      el.className = 'hljs'
-      el.innerHTML = result.value
-    }
-  }, [code, language])
-
+/**
+ * Renders pre-highlighted (server-side Shiki) source inside a macOS-style
+ * "window" frame — traffic-light buttons, filename, dark theme, rounded corners
+ * and a shadow — inspired by carbon.now.sh. The HTML comes from Shiki, which
+ * escapes the code into styled spans, so it is safe to inject.
+ */
+export function CodeRenderer({ html, filename }: { html: string; filename: string }) {
   return (
-    <div className="h-full overflow-auto bg-[#fff]">
-      <pre className="m-0 min-h-full p-4 text-[13px] leading-5">
-        <code ref={ref} className="font-mono">
-          {code}
-        </code>
-      </pre>
+    <div className="h-full overflow-hidden bg-neutral-100 p-4">
+      <div className="flex h-full flex-col overflow-hidden rounded-xl shadow-2xl ring-1 ring-black/10">
+        <div className="flex h-9 shrink-0 items-center gap-2 bg-[#161b22] px-4">
+          <span className="flex gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
+            <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+            <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
+          </span>
+          <span className="ml-2 truncate font-mono text-xs text-neutral-400">{filename}</span>
+        </div>
+        <div
+          className="min-h-0 flex-1 overflow-auto bg-[#0d1117] text-[13px] leading-relaxed [&_code]:font-mono [&_pre]:m-0 [&_pre]:!bg-transparent [&_pre]:p-4"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
     </div>
   )
 }

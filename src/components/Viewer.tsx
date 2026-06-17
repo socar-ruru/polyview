@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import type { RenderKind } from '@/lib/extensions'
-import { highlightLanguageOf } from '@/lib/extensions'
 import { formatBytes } from '@/lib/format'
+import { basename } from '@/lib/paths'
 import { MarkdownRenderer } from '@/components/renderers/MarkdownRenderer'
 import { HtmlRenderer } from '@/components/renderers/HtmlRenderer'
 import { TsxRenderer } from '@/components/renderers/TsxRenderer'
@@ -14,6 +14,8 @@ export interface ViewerFile {
   path: string
   kind: RenderKind | 'too-large' | 'not-found' | 'error'
   content?: string
+  /** Server-rendered Shiki HTML for the raw/data code view. */
+  highlightedHtml?: string
   size?: number
   isOpenApi?: boolean
   error?: string
@@ -69,7 +71,7 @@ function Body({ file, tab }: { file: ViewerFile; tab: DataTab }) {
       }
     // falls through — data without the OpenAPI tab renders like raw code
     case 'raw':
-      return <CodeRenderer code={file.content ?? ''} language={highlightLanguageOf(file.path)} />
+      return <CodeRenderer html={file.highlightedHtml ?? ''} filename={basename(file.path)} />
     case 'too-large':
       return (
         <Message heading="File too large to preview">

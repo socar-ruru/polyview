@@ -1,6 +1,7 @@
 import { getConfig } from '@/lib/config'
 import { getSource, FileNotFoundError, FileTooLargeError } from '@/lib/sources'
-import { renderKindOf, isOpenApiDocument } from '@/lib/extensions'
+import { renderKindOf, isOpenApiDocument, shikiLanguageOf } from '@/lib/extensions'
+import { highlightCode } from '@/lib/highlight'
 import { DEFAULT_APP_TITLE } from '@/lib/constants'
 import { AppHeader } from '@/components/AppHeader'
 import { ConfigError } from '@/components/ConfigError'
@@ -57,12 +58,16 @@ async function loadFile(path: string): Promise<ViewerFile> {
   }
   try {
     const { text, size } = await getSource().readText(path)
+    // Code-like files are highlighted on the server so the client ships no
+    // highlighter; markdown/html/tsx have their own renderers.
+    const isCode = kind === 'raw' || kind === 'data'
     return {
       path,
       kind,
       content: text,
       size,
       isOpenApi: kind === 'data' && isOpenApiDocument(text),
+      highlightedHtml: isCode ? await highlightCode(text, shikiLanguageOf(path)) : undefined,
     }
   } catch (err) {
     if (err instanceof FileTooLargeError) {

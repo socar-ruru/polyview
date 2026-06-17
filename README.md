@@ -52,6 +52,35 @@ docker run -p 3000:3000 \
 
 어느 소스든 **루트 밖 경로는 직접 요청으로도 접근 불가**하며(`..`·심볼릭 링크 탈출 차단), 현재 소스는 **설정 페이지(`/settings`)** 에서 확인할 수 있습니다.
 
+## 로컬에서 작업 내용 시각화 (`bin/polyview`)
+
+지금 작업 중인 **로컬 디렉터리**를 빠르게 브라우저에 띄워 보는 용도입니다. 서버를 상시 켜둘 필요 없이, 보고 싶을 때 실행하고 `Ctrl-C`로 끕니다.
+
+**1회 설정** — 이 저장소를 클론하고 의존성을 설치한 뒤, 런처를 alias로 걸어둡니다(Node 18.17+ 필요, `.nvmrc`는 `22`):
+
+```bash
+git clone https://github.com/socar-ruru/polyview && cd polyview
+npm install
+echo 'alias polyview="'"$PWD"'/bin/polyview"' >> ~/.zshrc   # 또는 ~/.bashrc
+```
+
+**사용** — 보고 싶은 디렉터리에서:
+
+```bash
+polyview                 # 현재 디렉터리를 띄움
+polyview ~/dev/my-app    # 특정 디렉터리
+PORT=4000 polyview .     # 포트 지정
+```
+
+dev 서버가 그 디렉터리를 **읽기 전용**으로 띄우고 브라우저(`/browse`)를 자동으로 엽니다. 좌측 트리에서 파일을 고르면:
+
+- `.tsx` 독립 컴포넌트 → 샌드박스에서 실제 렌더
+- `.md` → GFM 렌더, `.html` → 샌드박스 미리보기
+- `.yaml`/`.json` 이 OpenAPI 스펙이면 상단 **Raw/OpenAPI 토글**(Scalar)
+- `.ts`/`.js` 등 소스코드 → **Carbon 스타일 다크 뷰**(Shiki 하이라이팅)
+
+> `.git`·`node_modules`는 목록·조회 모두 제외됩니다. 루트 밖은 접근 불가합니다.
+
 ## 환경 변수
 
 | 변수 | 필수 | 기본값 | 설명 |

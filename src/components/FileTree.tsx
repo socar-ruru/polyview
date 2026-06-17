@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import type { TreeFile } from '@/lib/sources'
+import { basename } from '@/lib/paths'
 
 interface DirNode {
   name: string
@@ -178,10 +179,6 @@ function finalizeDir(node: MutableDir): DirNode {
 
 function hrefFor(path: string): string {
   return `/browse/${path.split('/').map(encodeURIComponent).join('/')}`
-}
-
-function basename(path: string): string {
-  return path.slice(path.lastIndexOf('/') + 1)
 }
 
 function indent(depth: number): number {
