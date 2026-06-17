@@ -81,6 +81,20 @@ dev 서버가 그 디렉터리를 **읽기 전용**으로 띄우고 브라우저
 
 > `.git`·`node_modules`는 목록·조회 모두 제외됩니다. 루트 밖은 접근 불가합니다.
 
+## Claude Code 플러그인
+
+이 repo는 그 자체로 Claude Code 마켓플레이스입니다. 터미널에서 추가·설치하면 스킬/커맨드로 쓸 수 있습니다:
+
+```text
+/plugin marketplace add socar-ruru/polyview
+/plugin install polyview@polyview
+```
+
+- **스킬** — "이 디렉터리 polyview로 보여줘"처럼 말하면 현재(또는 지정) 디렉터리를 띄웁니다.
+- **커맨드** — `/polyview [디렉터리]` 로 직접 실행.
+
+플러그인은 설치 시 의존성을 받지 않으므로 **최초 1회 실행에서 `npm install`(~1분)** 이 자동으로 돌고, 이후엔 바로 dev 서버가 떠 브라우저가 열립니다. (Node 18.17+ 필요)
+
 ## 환경 변수
 
 | 변수 | 필수 | 기본값 | 설명 |

@@ -1,0 +1,11 @@
+{
+  "name": "polyview",
+  "version": "0.1.0",
+  "description": "로컬 디렉터리를 브라우저에서 시각화 — tsx/html/markdown/OpenAPI/소스코드 렌더링",
+  "author": {
+    "name": "socar-ruru",
+    "url": "https://github.com/socar-ruru"
+  },
+  "repository": "https://github.com/socar-ruru/polyview",
+  "keywords": ["viewer", "visualize", "shiki", "openapi", "markdown", "tsx", "carbon"]
+}
