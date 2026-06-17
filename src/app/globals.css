@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-white text-neutral-900 antialiased;
+}
+
+/* Markdown rendering ------------------------------------------------------- */
+.markdown-body {
+  @apply text-[15px] leading-7 text-neutral-800;
+}
+.markdown-body h1 {
+  @apply mb-4 mt-8 border-b border-neutral-200 pb-2 text-3xl font-bold;
+}
+.markdown-body h2 {
+  @apply mb-3 mt-7 border-b border-neutral-200 pb-1.5 text-2xl font-semibold;
+}
+.markdown-body h3 {
+  @apply mb-2 mt-6 text-xl font-semibold;
+}
+.markdown-body p {
+  @apply my-4;
+}
+.markdown-body ul {
+  @apply my-4 list-disc pl-6;
+}
+.markdown-body ol {
+  @apply my-4 list-decimal pl-6;
+}
+.markdown-body li {
+  @apply my-1;
+}
+.markdown-body a {
+  @apply text-blue-600 underline;
+}
+.markdown-body blockquote {
+  @apply my-4 border-l-4 border-neutral-300 pl-4 text-neutral-600;
+}
+.markdown-body code {
+  @apply rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[13px];
+}
+.markdown-body pre {
+  @apply my-4 overflow-x-auto rounded-lg bg-neutral-50 p-4 text-[13px];
+}
+.markdown-body pre code {
+  @apply bg-transparent p-0;
+}
+.markdown-body table {
+  @apply my-4 w-full border-collapse text-sm;
+}
+.markdown-body th,
+.markdown-body td {
+  @apply border border-neutral-200 px-3 py-1.5 text-left;
+}
+.markdown-body img {
+  @apply max-w-full;
+}

@@ -1,0 +1,18 @@
+services:
+  polyview:
+    build: .
+    # Or use a prebuilt image instead of building locally:
+    # image: ghcr.io/your-org/polyview:latest
+    ports:
+      - '3000:3000'
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GITHUB_REPO: ${GITHUB_REPO}
+      GITHUB_BRANCH: ${GITHUB_BRANCH:-main}
+      GITHUB_BASE_PATH: ${GITHUB_BASE_PATH:-}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:-}
+      BASIC_AUTH_PASSWORD: ${BASIC_AUTH_PASSWORD:-}
+      APP_TITLE: ${APP_TITLE:-Polyview}
+      CACHE_TTL: ${CACHE_TTL:-60}
+      MAX_FILE_BYTES: ${MAX_FILE_BYTES:-2097152}
+    restart: unless-stopped
