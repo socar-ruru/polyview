@@ -9,6 +9,7 @@
  */
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
+import githubLight from 'shiki/themes/github-light.mjs'
 import githubDark from 'shiki/themes/github-dark.mjs'
 import typescript from 'shiki/langs/typescript.mjs'
 import tsx from 'shiki/langs/tsx.mjs'
@@ -31,7 +32,9 @@ import markdown from 'shiki/langs/markdown.mjs'
 import toml from 'shiki/langs/toml.mjs'
 import ini from 'shiki/langs/ini.mjs'
 
-const THEME = 'github-dark'
+// Dual theme: light is the default inline color, dark is emitted as a
+// `--shiki-dark` CSS variable that globals.css flips to under `.dark`.
+const THEMES = { light: 'github-light', dark: 'github-dark' } as const
 
 let highlighterPromise: Promise<HighlighterCore> | null = null
 let loadedLangs: Set<string> | null = null
@@ -39,7 +42,7 @@ let loadedLangs: Set<string> | null = null
 function getHighlighter(): Promise<HighlighterCore> {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighterCore({
-      themes: [githubDark],
+      themes: [githubLight, githubDark],
       // Keep this set in sync with SHIKI_LANG in lib/extensions.ts — a mapped
       // language that is not registered here silently falls back to plain text.
       langs: [
@@ -57,5 +60,5 @@ export async function highlightCode(code: string, lang: string | undefined): Pro
   const hl = await getHighlighter()
   loadedLangs ??= new Set(hl.getLoadedLanguages())
   const resolved = lang && loadedLangs.has(lang) ? lang : 'text'
-  return hl.codeToHtml(code, { lang: resolved, theme: THEME })
+  return hl.codeToHtml(code, { lang: resolved, themes: THEMES })
 }

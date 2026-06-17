@@ -29,8 +29,8 @@ export function Viewer({ file }: { file: ViewerFile }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4">
-        <span className="truncate font-mono text-xs text-neutral-500">{file.path}</span>
+      <div className="flex h-10 shrink-0 items-center justify-between gap-3 border-b border-line px-4">
+        <span className="truncate font-mono text-xs text-muted">{file.path}</span>
         {showTabs ? (
           <div className="flex items-center gap-1 text-xs">
             <TabButton active={tab === 'raw'} onClick={() => setTab('raw')}>
@@ -103,7 +103,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={`rounded px-2 py-1 font-medium transition-colors ${
-        active ? 'bg-neutral-900 text-white' : 'text-neutral-500 hover:bg-neutral-100'
+        active ? 'bg-accent text-white' : 'text-muted hover:bg-hover/50'
       }`}
     >
       {children}
@@ -117,7 +117,7 @@ function ScrollArea({ children }: { children: React.ReactNode }) {
 
 function ImageBody({ path }: { path: string }) {
   return (
-    <div className="flex h-full items-center justify-center overflow-auto bg-neutral-100 p-6">
+    <div className="flex h-full items-center justify-center overflow-auto bg-subtle p-6">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={rawUrl(path)} alt={path} className="max-h-full max-w-full object-contain" />
     </div>
@@ -136,10 +136,10 @@ function Message({
   return (
     <div className="flex h-full items-center justify-center p-8">
       <div className="max-w-md text-center">
-        <h2 className={`mb-2 text-base font-semibold ${tone === 'error' ? 'text-red-600' : ''}`}>
+        <h2 className={`mb-2 text-base font-semibold ${tone === 'error' ? 'text-error' : 'text-fg'}`}>
           {heading}
         </h2>
-        <p className="text-sm text-neutral-500">{children}</p>
+        <p className="text-sm text-muted">{children}</p>
       </div>
     </div>
   )
@@ -147,7 +147,7 @@ function Message({
 
 function RawLink({ path, children }: { path: string; children: React.ReactNode }) {
   return (
-    <a className="text-blue-600 underline" href={rawUrl(path)} target="_blank" rel="noreferrer">
+    <a className="text-accent underline" href={rawUrl(path)} target="_blank" rel="noreferrer">
       {children}
     </a>
   )

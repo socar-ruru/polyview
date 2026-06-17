@@ -29,7 +29,7 @@ export function FileTree({ files, currentPath }: { files: TreeFile[]; currentPat
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Filter files…"
-          className="w-full rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-neutral-400"
+          className="w-full rounded-md border border-line bg-canvas px-2.5 py-1.5 text-xs text-fg outline-none focus:border-accent"
         />
       </div>
       <nav className="min-h-0 flex-1 overflow-y-auto px-1 pb-3 text-sm">
@@ -45,7 +45,7 @@ export function FileTree({ files, currentPath }: { files: TreeFile[]; currentPat
 
 function FlatList({ files, currentPath }: { files: TreeFile[]; currentPath: string }) {
   if (files.length === 0) {
-    return <p className="px-3 py-2 text-xs text-neutral-400">No matching files.</p>
+    return <p className="px-3 py-2 text-xs text-muted">No matching files.</p>
   }
   return (
     <ul>
@@ -91,7 +91,7 @@ function Folder({ dir, currentPath, depth }: { dir: DirNode; currentPath: string
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-neutral-700 hover:bg-neutral-200/60"
+        className="flex w-full items-center gap-1 rounded px-2 py-1 text-left text-fg hover:bg-hover/50"
         style={{ paddingLeft: indent(depth) }}
       >
         <Chevron open={open} />
@@ -117,7 +117,7 @@ function FileLink({
     <Link
       href={hrefFor(path)}
       className={`block truncate rounded px-2 py-1 ${
-        active ? 'bg-blue-100 font-medium text-blue-800' : 'text-neutral-600 hover:bg-neutral-200/60'
+        active ? 'bg-accent/15 font-medium text-accent' : 'text-muted hover:bg-hover/50'
       }`}
       style={{ paddingLeft: indent(depth) + 14 }}
       title={path}
@@ -131,7 +131,7 @@ function Chevron({ open }: { open: boolean }) {
   return (
     <svg
       viewBox="0 0 16 16"
-      className={`h-3 w-3 shrink-0 text-neutral-400 transition-transform ${open ? 'rotate-90' : ''}`}
+      className={`h-3 w-3 shrink-0 text-muted transition-transform ${open ? 'rotate-90' : ''}`}
       fill="currentColor"
     >
       <path d="M6 4l4 4-4 4V4z" />

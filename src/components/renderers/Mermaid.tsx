@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import mermaid from 'mermaid'
-
-// Configure once when this lazily-loaded chunk is first imported.
-mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict' })
+import { useColorScheme } from '@/lib/use-color-scheme'
 
 let renderSeq = 0
 
@@ -17,6 +15,16 @@ let renderSeq = 0
 export function Mermaid({ chart }: { chart: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const scheme = useColorScheme()
+
+  // Reconfigure mermaid only when the theme changes, not on every chart change.
+  useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: scheme === 'dark' ? 'dark' : 'default',
+    })
+  }, [scheme])
 
   useEffect(() => {
     let cancelled = false
@@ -34,7 +42,7 @@ export function Mermaid({ chart }: { chart: string }) {
     return () => {
       cancelled = true
     }
-  }, [chart])
+  }, [chart, scheme])
 
   return (
     <>

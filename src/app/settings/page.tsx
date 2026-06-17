@@ -2,6 +2,7 @@ import { getConfig } from '@/lib/config'
 import { getSource, type SourceDetail } from '@/lib/sources'
 import { AppHeader } from '@/components/AppHeader'
 import { ConfigError } from '@/components/ConfigError'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { formatBytes } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -35,25 +36,36 @@ export default function SettingsPage() {
     <div className="flex h-screen flex-col">
       <AppHeader title={title} />
       <main className="min-h-0 flex-1 overflow-auto px-6 py-8 md:px-10">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="mb-1 text-lg font-semibold">소스 정보</h1>
-          <p className="mb-6 text-sm text-neutral-500">
-            현재 이 뷰어가 참고하고 있는 소스와 설정입니다. 변경하려면 환경 변수를 수정한 뒤
-            재시작하세요.
-          </p>
-          <dl className="overflow-hidden rounded-lg border border-neutral-200">
-            {rows.map((row, i) => (
-              <div
-                key={row.label}
-                className={`flex gap-4 px-4 py-3 text-sm ${
-                  i % 2 ? 'bg-white' : 'bg-neutral-50/60'
-                }`}
-              >
-                <dt className="w-40 shrink-0 font-medium text-neutral-500">{row.label}</dt>
-                <dd className="min-w-0 break-all font-mono text-neutral-800">{row.value}</dd>
+        <div className="mx-auto max-w-2xl space-y-8">
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-fg">테마</h2>
+            <div className="flex items-center justify-between rounded-lg border border-line bg-subtle/60 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-fg">색상 모드</p>
+                <p className="text-xs text-muted">Light / Dark / System (기본 System)</p>
               </div>
-            ))}
-          </dl>
+              <ThemeToggle />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-1 text-base font-semibold text-fg">소스 정보</h2>
+            <p className="mb-3 text-sm text-muted">
+              현재 이 뷰어가 참고하고 있는 소스와 설정입니다. 변경하려면 환경 변수를 수정한 뒤
+              재시작하세요.
+            </p>
+            <dl className="overflow-hidden rounded-lg border border-line">
+              {rows.map((row, i) => (
+                <div
+                  key={row.label}
+                  className={`flex gap-4 px-4 py-3 text-sm ${i % 2 ? 'bg-canvas' : 'bg-subtle/60'}`}
+                >
+                  <dt className="w-40 shrink-0 font-medium text-muted">{row.label}</dt>
+                  <dd className="min-w-0 break-all font-mono text-fg">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
         </div>
       </main>
     </div>

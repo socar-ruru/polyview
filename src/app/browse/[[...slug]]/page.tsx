@@ -96,7 +96,7 @@ function Shell({
       <AppHeader title={title} />
       <div className="flex min-h-0 flex-1">
         {sidebar !== null && (
-          <aside className="w-72 shrink-0 overflow-y-auto border-r border-neutral-200 bg-neutral-50/60">
+          <aside className="w-72 shrink-0 overflow-y-auto border-r border-line bg-subtle/60">
             {sidebar}
           </aside>
         )}
@@ -118,10 +118,10 @@ function Notice({
   return (
     <div className="flex h-full items-center justify-center p-8">
       <div className="max-w-md text-center">
-        <h2 className={`mb-2 text-lg font-semibold ${tone === 'error' ? 'text-red-600' : ''}`}>
+        <h2 className={`mb-2 text-lg font-semibold ${tone === 'error' ? 'text-error' : 'text-fg'}`}>
           {heading}
         </h2>
-        <p className="text-sm text-neutral-500">{children}</p>
+        <p className="text-sm text-muted">{children}</p>
       </div>
     </div>
   )

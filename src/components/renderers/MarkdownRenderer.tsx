@@ -5,11 +5,11 @@ import dynamic from 'next/dynamic'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
-import 'highlight.js/styles/github.css'
 
 // Markdown code blocks use highlight.js via rehype (it plugs into the
 // react-markdown pipeline synchronously). Standalone source files use Shiki
 // (lib/highlight.ts) instead — its async API doesn't fit this pipeline.
+// hljs token colors live in globals.css (.hljs-*) and flip with .dark.
 // `mermaid` blocks are intercepted below and rendered as diagrams; the mermaid
 // library is loaded lazily so plain markdown views don't pay for it.
 

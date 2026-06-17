@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useColorScheme } from '@/lib/use-color-scheme'
 
 type State =
   | { status: 'loading' }
@@ -14,6 +15,7 @@ type State =
  */
 export function TsxRenderer({ code }: { code: string }) {
   const [state, setState] = useState<State>({ status: 'loading' })
+  const colorScheme = useColorScheme()
 
   useEffect(() => {
     let cancelled = false
@@ -47,9 +49,9 @@ export function TsxRenderer({ code }: { code: string }) {
   }
   if (state.status === 'error') {
     return (
-      <div className="h-full overflow-auto bg-white p-6">
-        <h2 className="mb-2 text-sm font-semibold text-red-600">Compilation failed</h2>
-        <pre className="overflow-x-auto rounded-lg bg-neutral-900 p-4 text-xs text-neutral-100">
+      <div className="h-full overflow-auto bg-canvas p-6">
+        <h2 className="mb-2 text-sm font-semibold text-error">Compilation failed</h2>
+        <pre className="overflow-x-auto rounded-lg border border-line bg-subtle p-4 text-xs text-fg">
           {state.message}
         </pre>
       </div>
@@ -59,7 +61,8 @@ export function TsxRenderer({ code }: { code: string }) {
     <iframe
       title="tsx preview"
       sandbox="allow-scripts"
-      className="h-full w-full border-0 bg-white"
+      className="h-full w-full border-0"
+      style={{ colorScheme }}
       srcDoc={state.srcDoc}
     />
   )
@@ -80,7 +83,7 @@ function buildSrcDoc(js: string): string {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-full items-center justify-center text-sm text-neutral-400">
+    <div className="flex h-full items-center justify-center text-sm text-muted">
       {children}
     </div>
   )
