@@ -38,7 +38,7 @@ function mermaidSource(children: ReactNode): string | null {
 /** Renders markdown with GitHub-flavoured extensions, code highlighting, and mermaid. */
 export function MarkdownRenderer({ content }: { content: string }) {
   return (
-    <div className="markdown-body mx-auto max-w-3xl">
+    <div className="markdown-body w-full">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeHighlight, { detect: true, ignoreMissing: true }]]}
