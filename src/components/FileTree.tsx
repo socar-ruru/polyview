@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import type { TreeFile } from '@/lib/github'
+import type { TreeFile } from '@/lib/sources'
 
 interface DirNode {
   name: string

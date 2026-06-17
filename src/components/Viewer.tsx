@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { RenderKind } from '@/lib/extensions'
 import { highlightLanguageOf } from '@/lib/extensions'
+import { formatBytes } from '@/lib/format'
 import { MarkdownRenderer } from '@/components/renderers/MarkdownRenderer'
 import { HtmlRenderer } from '@/components/renderers/HtmlRenderer'
 import { TsxRenderer } from '@/components/renderers/TsxRenderer'
@@ -152,10 +153,4 @@ function RawLink({ path, children }: { path: string; children: React.ReactNode }
 
 function rawUrl(path: string): string {
   return `/api/raw?path=${encodeURIComponent(path)}`
-}
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }

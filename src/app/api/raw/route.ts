@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFileBytes, FileNotFoundError, FileTooLargeError } from '@/lib/github'
+import { getSource, FileNotFoundError, FileTooLargeError } from '@/lib/sources'
 import { rawContentTypeOf } from '@/lib/extensions'
 
 export const runtime = 'nodejs'
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const bytes = await getFileBytes(path)
+    const bytes = await getSource().readBytes(path)
     const contentType = rawContentTypeOf(path)
     return new NextResponse(new Uint8Array(bytes), {
       headers: {

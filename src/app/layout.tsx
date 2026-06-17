@@ -6,7 +6,7 @@ const title = process.env.APP_TITLE?.trim() || DEFAULT_APP_TITLE
 
 export const metadata: Metadata = {
   title,
-  description: 'Browse and render files from a private GitHub repository.',
+  description: 'Browse and render files from a GitHub repo or local directory.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
