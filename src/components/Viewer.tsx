@@ -25,7 +25,9 @@ type DataTab = 'raw' | 'openapi'
 
 export function Viewer({ file }: { file: ViewerFile }) {
   const showTabs = file.kind === 'data' && file.isOpenApi === true
-  const [tab, setTab] = useState<DataTab>('raw')
+  // OpenAPI specs open in the rendered OpenAPI view by default; the Viewer is
+  // keyed on file.path so this initial value is re-evaluated per file.
+  const [tab, setTab] = useState<DataTab>(file.isOpenApi === true ? 'openapi' : 'raw')
 
   return (
     <div className="flex h-full flex-col">
