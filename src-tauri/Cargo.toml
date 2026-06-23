@@ -1,0 +1,23 @@
+[package]
+name = "polyview"
+version = "0.1.0"
+description = "Polyview — render markdown, OpenAPI, TSX and more from a local directory or GitHub repo"
+authors = ["ruru"]
+edition = "2021"
+
+[lib]
+# `_lib` 접미사로 lib 이름을 bin 이름과 다르게 둔다(Windows cargo 의 제약 —
+# rust-lang/cargo#8519 참고).
+name = "polyview_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }

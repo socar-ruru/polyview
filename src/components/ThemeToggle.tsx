@@ -1,7 +1,5 @@
-'use client'
-
-import { useEffect, useState, type SVGProps } from 'react'
-import { useTheme } from 'next-themes'
+import { type SVGProps } from 'react'
+import { useTheme } from '@/lib/theme'
 
 const OPTIONS = [
   { value: 'light', label: 'Light', Icon: SunIcon },
@@ -9,14 +7,9 @@ const OPTIONS = [
   { value: 'system', label: 'System', Icon: MonitorIcon },
 ] as const
 
-/** Light / Dark / System segmented control, persisted via next-themes. */
+/** Light / Dark / System 세그먼트 컨트롤. 선택값은 테마 프로바이더를 통해 유지된다. */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  // Until mounted, the resolved preference is unknown — render nothing active to
-  // avoid a hydration mismatch.
-  const active = mounted ? theme : undefined
 
   return (
     <div className="inline-flex items-center gap-0.5 rounded-md border border-line p-0.5">
@@ -26,9 +19,9 @@ export function ThemeToggle() {
           onClick={() => setTheme(value)}
           title={label}
           aria-label={label}
-          aria-pressed={active === value}
+          aria-pressed={theme === value}
           className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${
-            active === value ? 'bg-accent text-white' : 'text-muted hover:bg-hover/50'
+            theme === value ? 'bg-accent text-white' : 'text-muted hover:bg-hover/50'
           }`}
         >
           <Icon className="h-4 w-4" />

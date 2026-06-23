@@ -1,39 +1,36 @@
-'use client'
-
-import { useMemo } from 'react'
-import dynamic from 'next/dynamic'
-import { useColorScheme } from '@/lib/use-color-scheme'
+import { lazy, Suspense, useMemo } from 'react'
+import { useColorScheme } from '@/lib/theme'
 import '@scalar/api-reference-react/style.css'
 
-// Scalar is a large, browser-only bundle: load it lazily and only when the
-// OpenAPI tab is actually selected.
-const ApiReferenceReact = dynamic(
-  () => import('@scalar/api-reference-react').then((m) => m.ApiReferenceReact),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center text-sm text-muted">
-        Loading API reference…
-      </div>
-    ),
-  },
+// Scalar 는 크기가 큰 브라우저 전용 번들이므로, OpenAPI 탭이 실제로 선택될 때만
+// 지연 로드한다.
+const ApiReferenceReact = lazy(() =>
+  import('@scalar/api-reference-react').then((m) => ({ default: m.ApiReferenceReact })),
 )
 
 /**
- * Renders a yaml/json OpenAPI document with Scalar. `hideTestRequestButton`
- * removes the interactive request client so the viewer never fires calls at
- * internal API servers from the user's browser.
+ * yaml/json OpenAPI 문서를 Scalar 로 렌더링한다. `hideTestRequestButton` 은
+ * 인터랙티브 요청 클라이언트를 제거하여, 뷰어가 사용자 머신에서 내부 API 서버로
+ * 요청을 보내지 않도록 한다.
  */
 export function OpenApiRenderer({ content }: { content: string }) {
   const scheme = useColorScheme()
-  // Memoized so Scalar (heavy) only re-renders when content or theme changes.
+  // Scalar(무거움)가 콘텐츠나 테마 변경 시에만 재렌더링되도록 메모이제이션한다.
   const configuration = useMemo(
     () => ({ content, hideTestRequestButton: true, darkMode: scheme === 'dark' }),
     [content, scheme],
   )
   return (
     <div className="h-full overflow-auto">
-      <ApiReferenceReact configuration={configuration} />
+      <Suspense
+        fallback={
+          <div className="flex h-full items-center justify-center text-sm text-muted">
+            API 레퍼런스 로딩 중…
+          </div>
+        }
+      >
+        <ApiReferenceReact configuration={configuration} />
+      </Suspense>
     </div>
   )
 }

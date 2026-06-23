@@ -1,4 +1,4 @@
-/** Tiny in-memory TTL cache shared across requests in a single process. */
+/** 한 프로세스 안에서 공유되는 작은 인메모리 TTL 캐시. */
 
 interface Entry<T> {
   value: Promise<T>
@@ -18,9 +18,8 @@ export function cached<T>(
     return hit.value
   }
 
-  // Store the in-flight promise so concurrent callers share one fetch
-  // (stampede protection), but evict it if it rejects so a transient failure
-  // isn't cached for the whole TTL.
+  // 진행 중인 promise 를 저장해 동시 호출자가 한 번의 조회를 공유하게 한다
+  // (스탬피드 방지). 단, 실패하면 제거해서 일시적 실패가 TTL 내내 캐시되지 않게 한다.
   const value = produce()
   value.catch(() => {
     if (store.get(key)?.value === value) store.delete(key)

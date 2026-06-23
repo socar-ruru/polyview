@@ -1,6 +1,4 @@
-'use client'
-
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import type { TreeFile } from '@/lib/sources'
 import { basename } from '@/lib/paths'
@@ -8,7 +6,7 @@ import { basename } from '@/lib/paths'
 interface DirNode {
   name: string
   path: string
-  /** Child directories, pre-sorted by name. */
+  /** 이름순으로 미리 정렬된 자식 디렉터리 목록. */
   dirs: DirNode[]
   files: TreeFile[]
 }
@@ -115,7 +113,7 @@ function FileLink({
 }) {
   return (
     <Link
-      href={hrefFor(path)}
+      to={hrefFor(path)}
       className={`block truncate rounded px-2 py-1 ${
         active ? 'bg-accent/15 font-medium text-accent' : 'text-muted hover:bg-hover/50'
       }`}
@@ -139,7 +137,7 @@ function Chevron({ open }: { open: boolean }) {
   )
 }
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// ─── 헬퍼 ────────────────────────────────────────────────────────────────────
 
 interface MutableDir {
   name: string
@@ -168,8 +166,8 @@ function buildTree(files: TreeFile[]): DirNode {
   return finalizeDir(root)
 }
 
-/** Freezes a built directory into its sorted, render-ready form. Files arrive
- * already globally sorted by path, so only the directories need ordering. */
+/** 구성 완료된 디렉터리를 정렬된 렌더 가능한 형태로 확정한다. 파일은 전역 경로순으로
+ * 이미 정렬되어 있으므로 디렉터리만 순서를 맞추면 된다. */
 function finalizeDir(node: MutableDir): DirNode {
   const dirs = [...node.dirs.values()]
     .sort((a, b) => a.name.localeCompare(b.name))

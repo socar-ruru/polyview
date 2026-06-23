@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { RenderKind } from '@/lib/extensions'
 import { formatBytes } from '@/lib/format'
@@ -14,8 +12,10 @@ export interface ViewerFile {
   path: string
   kind: RenderKind | 'too-large' | 'not-found' | 'error'
   content?: string
-  /** Server-rendered Shiki HTML for the raw/data code view. */
+  /** Shiki 로 강조된 raw/data 코드 뷰 HTML. */
   highlightedHtml?: string
+  /** 이미지 표시용 data URL. */
+  imageUrl?: string
   size?: number
   isOpenApi?: boolean
   error?: string
@@ -25,8 +25,8 @@ type DataTab = 'raw' | 'openapi'
 
 export function Viewer({ file }: { file: ViewerFile }) {
   const showTabs = file.kind === 'data' && file.isOpenApi === true
-  // OpenAPI specs open in the rendered OpenAPI view by default; the Viewer is
-  // keyed on file.path so this initial value is re-evaluated per file.
+  // OpenAPI 스펙은 기본으로 렌더링된 OpenAPI 뷰로 열린다. Viewer 는
+  // file.path 를 key 로 사용하므로 이 초기값은 파일마다 재평가된다.
   const [tab, setTab] = useState<DataTab>(file.isOpenApi === true ? 'openapi' : 'raw')
 
   return (
@@ -66,26 +66,26 @@ function Body({ file, tab }: { file: ViewerFile; tab: DataTab }) {
     case 'tsx':
       return <TsxRenderer code={file.content ?? ''} />
     case 'image':
-      return <ImageBody path={file.path} />
+      return <ImageBody url={file.imageUrl} path={file.path} />
     case 'data':
       if (file.isOpenApi === true && tab === 'openapi') {
         return <OpenApiRenderer content={file.content ?? ''} />
       }
-    // falls through — data without the OpenAPI tab renders like raw code
+    // falls through — OpenAPI 탭이 없는 data 는 raw 코드처럼 렌더링된다
     case 'raw':
       return <CodeRenderer html={file.highlightedHtml ?? ''} filename={basename(file.path)} />
     case 'too-large':
       return (
-        <Message heading="File too large to preview">
-          This file is {formatBytes(file.size ?? 0)} and exceeds the configured limit.{' '}
-          <RawLink path={file.path}>Download raw</RawLink>.
+        <Message heading="파일이 너무 커서 미리보기할 수 없습니다">
+          이 파일은 {formatBytes(file.size ?? 0)} 로 설정된 한도를 초과합니다. 설정에서 최대 파일
+          크기를 늘릴 수 있습니다.
         </Message>
       )
     case 'not-found':
-      return <Message heading="File not found">It may have been moved or deleted.</Message>
+      return <Message heading="파일을 찾을 수 없습니다">이동되었거나 삭제되었을 수 있습니다.</Message>
     default:
       return (
-        <Message heading="Could not load file" tone="error">
+        <Message heading="파일을 불러오지 못했습니다" tone="error">
           {file.error ?? 'Unknown error'}
         </Message>
       )
@@ -117,11 +117,13 @@ function ScrollArea({ children }: { children: React.ReactNode }) {
   return <div className="h-full overflow-auto px-6 py-5 md:px-10">{children}</div>
 }
 
-function ImageBody({ path }: { path: string }) {
+function ImageBody({ url, path }: { url?: string; path: string }) {
+  if (!url) {
+    return <Message heading="이미지를 불러오지 못했습니다">{path}</Message>
+  }
   return (
     <div className="flex h-full items-center justify-center overflow-auto bg-subtle p-6">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={rawUrl(path)} alt={path} className="max-h-full max-w-full object-contain" />
+      <img src={url} alt={path} className="max-h-full max-w-full object-contain" />
     </div>
   )
 }
@@ -145,16 +147,4 @@ function Message({
       </div>
     </div>
   )
-}
-
-function RawLink({ path, children }: { path: string; children: React.ReactNode }) {
-  return (
-    <a className="text-accent underline" href={rawUrl(path)} target="_blank" rel="noreferrer">
-      {children}
-    </a>
-  )
-}
-
-function rawUrl(path: string): string {
-  return `/api/raw?path=${encodeURIComponent(path)}`
 }

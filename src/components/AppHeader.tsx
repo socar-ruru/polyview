@@ -1,22 +1,23 @@
+import { Link } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
-/** Top bar shared by the browse and settings pages: title + theme toggle + settings. */
+/** 탐색·설정 페이지 공용 상단 바: 타이틀 + 테마 토글 + 설정 버튼. */
 export function AppHeader({ title }: { title: string }) {
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-line px-4">
-      <a href="/browse" className="text-sm font-semibold tracking-tight text-fg">
+      <Link to="/browse" className="text-sm font-semibold tracking-tight text-fg">
         {title}
-      </a>
+      </Link>
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <a
-          href="/settings"
+        <Link
+          to="/settings"
           title="설정"
           aria-label="설정"
           className="text-muted transition-colors hover:text-fg"
         >
           <GearIcon />
-        </a>
+        </Link>
       </div>
     </header>
   )
