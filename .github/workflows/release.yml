@@ -50,7 +50,7 @@ jobs:
       - name: Node 설치
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 'lts/*'
           cache: npm
 
       - name: Rust 설치
