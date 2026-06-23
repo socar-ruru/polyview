@@ -10,7 +10,7 @@ import {
 } from '@/lib/settings'
 import { useSettings } from '@/lib/settings-context'
 import { errorMessage } from '@/lib/format'
-import { AppHeader } from '@/components/AppHeader'
+import { TitleBar } from '@/components/TitleBar'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 /** 소스/테마/동작을 직접 수정하는 설정 화면. 저장 시 키체인 토큰까지 함께 반영한다. */
@@ -28,8 +28,6 @@ export function Settings() {
   useEffect(() => {
     if (settings) setDraft(settings)
   }, [settings])
-
-  const title = draft.appTitle || DEFAULT_SETTINGS.appTitle
 
   async function pickFolder() {
     const selected = await open({
@@ -62,7 +60,7 @@ export function Settings() {
 
   return (
     <div className="flex h-screen flex-col">
-      <AppHeader title={title} />
+      <TitleBar />
       <main className="min-h-0 flex-1 overflow-auto px-6 py-8 md:px-10">
         <div className="mx-auto max-w-2xl space-y-8">
           <Section title="테마">

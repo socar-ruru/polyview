@@ -43,7 +43,13 @@ export function Viewer({ file }: { file: ViewerFile }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-11 shrink-0 items-center justify-between gap-3 border-b border-line px-4">
+      {/* 상단바가 없어 콘텐츠가 최상단에 붙으므로, 이 헤더의 빈 영역을 드래그하면
+          창이 움직이도록 data-tauri-drag-region 을 둔다(브레드크럼·세그먼트 버튼은
+          자기 클릭을 그대로 처리). */}
+      <header
+        data-tauri-drag-region
+        className="flex h-11 shrink-0 items-center justify-between gap-3 border-b border-line px-4"
+      >
         <div className="flex min-w-0 items-center gap-2.5">
           <Breadcrumb path={file.path} />
           <TypeBadge file={file} />

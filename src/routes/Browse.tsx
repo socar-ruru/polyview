@@ -10,8 +10,10 @@ import { basename } from '@/lib/paths'
 import { DEFAULT_APP_TITLE } from '@/lib/constants'
 import { type AppSettings, DEFAULT_SETTINGS } from '@/lib/settings'
 import { useSettings } from '@/lib/settings-context'
-import { AppHeader } from '@/components/AppHeader'
+import { TitleBar } from '@/components/TitleBar'
 import { FileTree } from '@/components/FileTree'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { SettingsIcon } from '@/components/icons'
 import { Viewer, type ViewerFile } from '@/components/Viewer'
 
 // 현재 윈도우 핸들. setTitle 호출마다 새 Window 객체를 만들지 않도록 모듈 스코프에 둔다.
@@ -38,7 +40,7 @@ export function Browse() {
 
   if (!source) {
     return (
-      <Shell title={title} sidebar={null}>
+      <Shell sidebar={null}>
         <Notice tone="muted" heading="소스가 구성되지 않았습니다">
           {sourceError ?? '설정에서 로컬 디렉터리나 GitHub 저장소를 지정하세요.'}{' '}
           <Link to="/settings" className="text-accent underline">
@@ -53,7 +55,6 @@ export function Browse() {
     <Loaded
       source={source}
       path={path}
-      title={title}
       sourceLabel={sourceLabel}
       ttl={settings?.cacheTtlSeconds ?? DEFAULT_SETTINGS.cacheTtlSeconds}
     />
@@ -72,13 +73,11 @@ function sourceLabelOf(settings: AppSettings): string {
 function Loaded({
   source,
   path,
-  title,
   sourceLabel,
   ttl,
 }: {
   source: Source
   path: string
-  title: string
   sourceLabel?: string
   ttl: number
 }) {
@@ -129,7 +128,7 @@ function Loaded({
 
   if (listError !== null) {
     return (
-      <Shell title={title} sidebar={null}>
+      <Shell sidebar={null}>
         <Notice tone="error" heading="파일 목록을 불러오지 못했습니다">
           {listError}
         </Notice>
@@ -139,7 +138,6 @@ function Loaded({
 
   return (
     <Shell
-      title={title}
       sidebar={
         files ? (
           <FileTree files={files} currentPath={path} sourceLabel={sourceLabel} />
@@ -214,31 +212,55 @@ function mapLoadError(path: string, err: unknown): ViewerFile {
 // ─── 레이아웃 기본 요소 ──────────────────────────────────────────────────────
 
 function Shell({
-  title,
   sidebar,
   children,
 }: {
-  title: string
   sidebar: React.ReactNode
   children: React.ReactNode
 }) {
-  return (
-    <div className="flex h-screen flex-col">
-      <AppHeader title={title} />
-      <div className="flex min-h-0 flex-1">
-        {sidebar !== null && (
-          <aside className="w-72 shrink-0 overflow-y-auto border-r border-line bg-subtle/60">
-            {sidebar}
-          </aside>
-        )}
-        <main className="relative min-w-0 flex-1 overflow-hidden">{children}</main>
+  // 상단바 없음(Zed/Linear 스타일). 트래픽 라이트 자리는 사이드바 상단의
+  // TitleBar 스트립이 비우고, 콘텐츠는 상단 끝까지 올라간다. 사이드바가 없는
+  // 상태(미설정·에러)에선 콘텐츠 쪽에 스트립을 둬 라이트 자리를 비운다.
+  if (sidebar === null) {
+    return (
+      <div className="flex h-screen flex-col">
+        <TitleBar />
+        <main className="relative min-h-0 flex-1 overflow-hidden">{children}</main>
       </div>
+    )
+  }
+  return (
+    <div className="flex h-screen">
+      <aside className="flex w-72 shrink-0 flex-col border-r border-line bg-subtle/60">
+        <TitleBar />
+        <div className="min-h-0 flex-1">{sidebar}</div>
+        <SidebarFooter />
+      </aside>
+      <main className="relative min-w-0 flex-1 overflow-hidden">{children}</main>
     </div>
   )
 }
 
 function SidebarLoading() {
   return <p className="px-3 py-3 text-xs text-muted">목록 불러오는 중…</p>
+}
+
+/** 사이드바 하단 푸터: 테마 토글 + 설정. 예전엔 상단 타이틀바에 있던 컨트롤을
+ *  여기로 내려 타이틀바를 가볍게 했다. */
+function SidebarFooter() {
+  return (
+    <div className="flex shrink-0 items-center justify-between border-t border-line px-2.5 py-2">
+      <ThemeToggle />
+      <Link
+        to="/settings"
+        title="설정"
+        aria-label="설정"
+        className="flex h-7 w-7 items-center justify-center rounded text-muted transition-colors hover:bg-hover/50 hover:text-fg"
+      >
+        <SettingsIcon className="h-[18px] w-[18px]" />
+      </Link>
+    </div>
+  )
 }
 
 /**
