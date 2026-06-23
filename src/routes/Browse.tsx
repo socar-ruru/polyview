@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import type { Source, TreeFile } from '@/lib/sources'
 import { FileNotFoundError, FileTooLargeError } from '@/lib/sources'
 import { renderKindOf, isOpenApiDocument, shikiLanguageOf } from '@/lib/extensions'
 import { cached } from '@/lib/cache'
 import { errorMessage } from '@/lib/format'
+import { basename } from '@/lib/paths'
 import { DEFAULT_APP_TITLE } from '@/lib/constants'
 import { DEFAULT_SETTINGS } from '@/lib/settings'
 import { useSettings } from '@/lib/settings-context'
@@ -12,12 +14,22 @@ import { AppHeader } from '@/components/AppHeader'
 import { FileTree } from '@/components/FileTree'
 import { Viewer, type ViewerFile } from '@/components/Viewer'
 
+// 현재 윈도우 핸들. setTitle 호출마다 새 Window 객체를 만들지 않도록 모듈 스코프에 둔다.
+const appWindow = getCurrentWindow()
+
 /** 활성 소스에서 트리와 선택된 파일을 읽어 보여주는 메인 화면. */
 export function Browse() {
   const { loading, settings, source, sourceError } = useSettings()
   const params = useParams()
   const path = params['*'] ?? ''
   const title = settings?.appTitle || DEFAULT_APP_TITLE
+
+  // 선택된 파일명을 네이티브 윈도우 타이틀에 반영한다(미션 컨트롤·창 전환에서
+  // 네이티브 앱처럼 보이도록). 파일이 없으면 앱 타이틀만 표시.
+  useEffect(() => {
+    const label = path ? `${basename(path)} — ${title}` : title
+    void appWindow.setTitle(label)
+  }, [path, title])
 
   if (loading) {
     return <Centered>불러오는 중…</Centered>

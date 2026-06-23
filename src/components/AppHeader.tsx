@@ -1,10 +1,20 @@
 import { Link } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
-/** 탐색·설정 페이지 공용 상단 바: 타이틀 + 테마 토글 + 설정 버튼. */
+/**
+ * 탐색·설정 페이지 공용 상단 바: 타이틀 + 테마 토글 + 설정 버튼.
+ *
+ * titleBarStyle:"Overlay"(tauri.conf.json) 로 OS 타이틀바를 투명화해 이 헤더가
+ * 곧 타이틀바가 된다 — macOS unified toolbar 느낌. 그래서 (1) 좌측에 트래픽
+ * 라이트 자리(~78px)를 비우고, (2) data-tauri-drag-region 으로 헤더 빈 공간을
+ * 드래그하면 창이 움직이게 한다(버튼·링크는 자기 클릭을 그대로 처리).
+ */
 export function AppHeader({ title }: { title: string }) {
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between border-b border-line px-4">
+    <header
+      data-tauri-drag-region
+      className="flex h-12 shrink-0 items-center justify-between border-b border-line pl-[78px] pr-4"
+    >
       <Link to="/browse" className="text-sm font-semibold tracking-tight text-fg">
         {title}
       </Link>

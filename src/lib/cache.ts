@@ -27,3 +27,8 @@ export function cached<T>(
   store.set(key, { value, expiresAt: now + ttlSeconds * 1000 })
   return value
 }
+
+/** 캐시를 통째로 비운다. "새로고침" 시 디스크에서 다시 읽도록 호출한다. */
+export function clearCache(): void {
+  store.clear()
+}
