@@ -182,6 +182,39 @@ export function Settings() {
                   className={inputClass}
                 />
               </Field>
+              <Field
+                label="본문 글꼴"
+                hint="비우면 OS 시스템 폰트를 사용합니다. CSS font-family 값을 직접 입력할 수도 있습니다."
+              >
+                <input
+                  value={draft.fontFamily}
+                  onChange={(e) => setDraft((d) => ({ ...d, fontFamily: e.target.value }))}
+                  placeholder="시스템 기본 (예: Pretendard, 'Apple SD Gothic Neo')"
+                  className={inputClass}
+                />
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {FONT_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setDraft((d) => ({ ...d, fontFamily: preset.value }))}
+                      className={`rounded border px-2 py-1 text-xs transition-colors ${
+                        draft.fontFamily === preset.value
+                          ? 'border-accent text-accent'
+                          : 'border-line text-muted hover:bg-hover/50'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <p
+                  className="mt-2 rounded-md border border-line bg-canvas px-3 py-2 text-sm text-fg"
+                  style={{ fontFamily: draft.fontFamily || undefined }}
+                >
+                  미리보기 — 다람쥐 헌 쳇바퀴에 타고파. The quick brown fox 0123456789
+                </p>
+              </Field>
               <div className="flex gap-3">
                 <Field label="최대 파일 크기 (MB)" className="flex-1">
                   <input
@@ -319,6 +352,15 @@ function Field({
     </div>
   )
 }
+
+// 글꼴 빠른 선택 프리셋. 빈 값은 시스템 기본을 뜻하고, 나머지는 미설치 시
+// 일반 sans-serif 로 자연스럽게 폴백하도록 generic 패밀리를 덧붙인다.
+const FONT_PRESETS: Array<{ label: string; value: string }> = [
+  { label: '시스템 기본', value: '' },
+  { label: 'Pretendard', value: 'Pretendard, sans-serif' },
+  { label: 'Apple SD Gothic Neo', value: "'Apple SD Gothic Neo', sans-serif" },
+  { label: 'Noto Sans KR', value: "'Noto Sans KR', sans-serif" },
+]
 
 const inputClass =
   'w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm text-fg outline-none focus:border-accent'

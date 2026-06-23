@@ -64,6 +64,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     void reload()
   }, [reload])
 
+  // 설정의 글꼴을 문서 전역(--font-sans)에 반영한다. 비어 있으면 인라인 오버라이드를
+  // 제거해 index.css 의 시스템 폰트 기본값으로 되돌린다.
+  useEffect(() => {
+    const family = settings?.fontFamily.trim()
+    const root = document.documentElement
+    if (family) root.style.setProperty('--font-sans', family)
+    else root.style.removeProperty('--font-sans')
+  }, [settings?.fontFamily])
+
   const value: SettingsContextValue = {
     loading,
     settings,

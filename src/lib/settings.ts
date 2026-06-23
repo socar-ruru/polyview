@@ -28,6 +28,8 @@ export interface AppSettings {
   local: LocalSettings
   github: GitHubSettings
   appTitle: string
+  /** 본문 글꼴(CSS font-family). 비우면 OS 시스템 폰트 기본값을 쓴다. */
+  fontFamily: string
   /** 미리보기를 시도하는 최대 파일 크기(바이트). */
   maxFileBytes: number
   /** 트리/파일 캐시 TTL(초). */
@@ -39,6 +41,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   local: { root: '' },
   github: { repo: '', branch: 'main', basePath: '' },
   appTitle: DEFAULT_APP_TITLE,
+  fontFamily: '',
   maxFileBytes: 2 * 1024 * 1024,
   cacheTtlSeconds: 60,
 }
@@ -122,6 +125,7 @@ function mergeSettings(raw: unknown): AppSettings {
         typeof github.basePath === 'string' ? github.basePath : DEFAULT_SETTINGS.github.basePath,
     },
     appTitle: typeof r.appTitle === 'string' && r.appTitle.trim() ? r.appTitle : DEFAULT_APP_TITLE,
+    fontFamily: typeof r.fontFamily === 'string' ? r.fontFamily : DEFAULT_SETTINGS.fontFamily,
     maxFileBytes: positiveInt(r.maxFileBytes, DEFAULT_SETTINGS.maxFileBytes),
     cacheTtlSeconds: positiveInt(r.cacheTtlSeconds, DEFAULT_SETTINGS.cacheTtlSeconds),
   }

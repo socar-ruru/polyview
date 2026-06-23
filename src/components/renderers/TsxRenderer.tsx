@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useColorScheme } from '@/lib/theme'
+import { getAppFontStack, useColorScheme } from '@/lib/theme'
 import { compileTsx } from '@/lib/tsx-compiler'
 import { reactUmd, reactDomUmd } from '@/lib/react-runtime'
 
@@ -11,11 +11,12 @@ import { reactUmd, reactDomUmd } from '@/lib/react-runtime'
 export function TsxRenderer({ code }: { code: string }) {
   const colorScheme = useColorScheme()
 
+  const fontStack = getAppFontStack()
   // 변환과 srcDoc 생성을 한 memo 로 묶어 hook 순서를 안정적으로 유지한다.
   const compiled = useMemo(() => {
     const result = compileTsx(code)
-    return 'error' in result ? result : { srcDoc: buildSrcDoc(result.js) }
-  }, [code])
+    return 'error' in result ? result : { srcDoc: buildSrcDoc(result.js, fontStack) }
+  }, [code, fontStack])
 
   if ('error' in compiled) {
     return (
@@ -39,10 +40,10 @@ export function TsxRenderer({ code }: { code: string }) {
   )
 }
 
-function buildSrcDoc(js: string): string {
+function buildSrcDoc(js: string, fontStack: string): string {
   return `<!doctype html>
 <html>
-  <head><meta charset="utf-8" /><style>html,body{margin:0;height:100%}#root{min-height:100%}</style></head>
+  <head><meta charset="utf-8" /><style>html,body{margin:0;height:100%;font-family:${fontStack}}#root{min-height:100%}</style></head>
   <body>
     <div id="root"></div>
     <script>${escapeScript(reactUmd)}</script>

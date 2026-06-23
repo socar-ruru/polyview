@@ -90,3 +90,16 @@ export function useTheme(): ThemeContextValue {
 export function useColorScheme(): 'light' | 'dark' {
   return useTheme().resolvedTheme
 }
+
+const SYSTEM_FONT_FALLBACK = 'system-ui, sans-serif'
+
+/**
+ * 현재 앱 본문 글꼴 스택(`--font-sans`). 부모 문서를 상속하지 못하는 샌드박스
+ * iframe(HTML/TSX 렌더러)에 기본 글꼴을 주입할 때 쓴다. 설정에서 글꼴을
+ * 지정했으면 그 값을, 아니면 index.css 의 시스템 폰트 기본값을 돌려준다.
+ */
+export function getAppFontStack(): string {
+  if (typeof document === 'undefined') return SYSTEM_FONT_FALLBACK
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--font-sans').trim()
+  return value || SYSTEM_FONT_FALLBACK
+}
