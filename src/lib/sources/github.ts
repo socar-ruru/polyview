@@ -45,6 +45,11 @@ export class GitHubSource implements Source {
     }
   }
 
+  cacheKey(): string {
+    const gh = this.gh
+    return `gh:${gh.owner}/${gh.name}@${gh.branch}:${gh.basePath}`
+  }
+
   list(): Promise<TreeFile[]> {
     const gh = this.gh
     return cached(`tree:${gh.owner}/${gh.name}@${gh.branch}:${gh.basePath}`, this.ttl, async () => {

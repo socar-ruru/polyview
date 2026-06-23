@@ -36,6 +36,10 @@ export class LocalSource implements Source {
     }
   }
 
+  cacheKey(): string {
+    return `local:${this.root}`
+  }
+
   list(): Promise<TreeFile[]> {
     return cached(`local-tree:${this.root}`, this.ttl, () =>
       invoke<TreeFile[]>('list_dir', { root: this.root }),

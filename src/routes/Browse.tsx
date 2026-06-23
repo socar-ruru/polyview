@@ -3,8 +3,10 @@ import { Link, useParams } from 'react-router-dom'
 import type { Source, TreeFile } from '@/lib/sources'
 import { FileNotFoundError, FileTooLargeError } from '@/lib/sources'
 import { renderKindOf, isOpenApiDocument, shikiLanguageOf } from '@/lib/extensions'
+import { cached } from '@/lib/cache'
 import { errorMessage } from '@/lib/format'
 import { DEFAULT_APP_TITLE } from '@/lib/constants'
+import { DEFAULT_SETTINGS } from '@/lib/settings'
 import { useSettings } from '@/lib/settings-context'
 import { AppHeader } from '@/components/AppHeader'
 import { FileTree } from '@/components/FileTree'
@@ -34,21 +36,31 @@ export function Browse() {
     )
   }
 
-  return <Loaded source={source} path={path} title={title} />
+  return (
+    <Loaded
+      source={source}
+      path={path}
+      title={title}
+      ttl={settings?.cacheTtlSeconds ?? DEFAULT_SETTINGS.cacheTtlSeconds}
+    />
+  )
 }
 
 function Loaded({
   source,
   path,
   title,
+  ttl,
 }: {
   source: Source
   path: string
   title: string
+  ttl: number
 }) {
   const [files, setFiles] = useState<TreeFile[] | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const [file, setFile] = useState<ViewerFile | null>(null)
+  const [pending, setPending] = useState(false)
 
   // 트리 목록 — 소스가 바뀔 때만 다시 읽는다.
   useEffect(() => {
@@ -68,21 +80,27 @@ function Loaded({
     }
   }, [source])
 
-  // 선택된 파일 — 소스나 경로가 바뀔 때마다 다시 읽는다.
+  // 선택된 파일 — 소스나 경로가 바뀔 때마다 다시 읽는다. 로딩 중에는 이전
+  // 내용을 그대로 두어(stale-while-loading) 빈 화면 깜빡임을 없애고, 준비되면
+  // 한 번에 교체한다. 캐시 히트면 거의 즉시 끝난다.
   useEffect(() => {
     let cancelled = false
     if (!path) {
       setFile(null)
+      setPending(false)
       return
     }
-    setFile(null)
-    loadFile(source, path).then((loaded) => {
-      if (!cancelled) setFile(loaded)
+    setPending(true)
+    loadFile(source, path, ttl).then((loaded) => {
+      if (!cancelled) {
+        setFile(loaded)
+        setPending(false)
+      }
     })
     return () => {
       cancelled = true
     }
-  }, [source, path])
+  }, [source, path, ttl])
 
   if (listError !== null) {
     return (
@@ -99,6 +117,7 @@ function Loaded({
       title={title}
       sidebar={files ? <FileTree files={files} currentPath={path} /> : <SidebarLoading />}
     >
+      {pending && file && <TopLoadingBar />}
       {!path ? (
         <Notice tone="muted" heading="파일을 선택하세요">
           왼쪽 사이드바에서 파일을 고르면 미리보기가 표시됩니다. tsx, html, markdown, OpenAPI
@@ -114,38 +133,43 @@ function Loaded({
 }
 
 /**
- * 선택된 파일을 활성 소스에서 읽어 ViewerFile 로 만든다(이전 서버 loadFile 의 클라이언트판).
- * 최대 파일 크기 제한은 소스 인스턴스가 생성 시점에 갖고 있으므로 여기서 따로 넘기지 않는다.
+ * 선택된 파일을 ViewerFile 로 읽어온다(이전 서버 loadFile 의 클라이언트판).
+ * 결과(텍스트 + Shiki 하이라이트)는 소스·경로별로 캐시되므로, 같은 파일로
+ * 되돌아오면 IPC 읽기와 하이라이트 재계산 없이 즉시 표시된다. 트리 목록과 동일한
+ * TTL 을 따른다. 에러 결과는 캐시하지 않는다(아래 readFile 가 throw 하면 cached 가
+ * 항목을 제거한다).
  */
-async function loadFile(source: Source, path: string): Promise<ViewerFile> {
+function loadFile(source: Source, path: string, ttl: number): Promise<ViewerFile> {
+  return cached(`file:${source.cacheKey()}:${path}`, ttl, () => readFile(source, path)).catch(
+    (err) => mapLoadError(path, err),
+  )
+}
+
+/**
+ * 실제 읽기·하이라이트. 에러는 던져서 캐시에 남지 않게 한다. 최대 파일 크기
+ * 제한은 소스 인스턴스가 생성 시점에 갖고 있으므로 여기서 따로 넘기지 않는다.
+ */
+async function readFile(source: Source, path: string): Promise<ViewerFile> {
   const kind = renderKindOf(path)
   if (kind === 'image') {
-    try {
-      return { path, kind, imageUrl: await source.readDataUrl(path) }
-    } catch (err) {
-      return mapLoadError(path, err)
-    }
+    return { path, kind, imageUrl: await source.readDataUrl(path) }
   }
-  try {
-    const { text, size } = await source.readText(path)
-    // 코드류 파일은 Shiki 로 강조한다. Shiki 모듈은 여기서 처음 동적 import 되어
-    // 초기 번들에서 분리된다. markdown/html/tsx 는 각자 렌더러를 쓴다.
-    const isCode = kind === 'raw' || kind === 'data'
-    let highlightedHtml: string | undefined
-    if (isCode) {
-      const { highlightCode } = await import('@/lib/highlight')
-      highlightedHtml = await highlightCode(text, shikiLanguageOf(path))
-    }
-    return {
-      path,
-      kind,
-      content: text,
-      size,
-      isOpenApi: kind === 'data' && isOpenApiDocument(text),
-      highlightedHtml,
-    }
-  } catch (err) {
-    return mapLoadError(path, err)
+  const { text, size } = await source.readText(path)
+  // 코드류 파일은 Shiki 로 강조한다. Shiki 모듈은 여기서 처음 동적 import 되어
+  // 초기 번들에서 분리된다. markdown/html/tsx 는 각자 렌더러를 쓴다.
+  const isCode = kind === 'raw' || kind === 'data'
+  let highlightedHtml: string | undefined
+  if (isCode) {
+    const { highlightCode } = await import('@/lib/highlight')
+    highlightedHtml = await highlightCode(text, shikiLanguageOf(path))
+  }
+  return {
+    path,
+    kind,
+    content: text,
+    size,
+    isOpenApi: kind === 'data' && isOpenApiDocument(text),
+    highlightedHtml,
   }
 }
 
@@ -175,7 +199,7 @@ function Shell({
             {sidebar}
           </aside>
         )}
-        <main className="min-w-0 flex-1 overflow-hidden">{children}</main>
+        <main className="relative min-w-0 flex-1 overflow-hidden">{children}</main>
       </div>
     </div>
   )
@@ -183,6 +207,19 @@ function Shell({
 
 function SidebarLoading() {
   return <p className="px-3 py-3 text-xs text-muted">목록 불러오는 중…</p>
+}
+
+/**
+ * 다음 파일을 읽는 동안(이전 내용은 그대로 보이는 상태) 본문 상단에 뜨는 얇은
+ * 진행 표시. 캐시 히트면 거의 보이지 않을 만큼 짧게 스친다.
+ */
+function TopLoadingBar() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-accent"
+    />
+  )
 }
 
 function Centered({ children }: { children: React.ReactNode }) {

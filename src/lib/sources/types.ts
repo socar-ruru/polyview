@@ -40,6 +40,11 @@ export interface SourceInfo {
 export interface Source {
   /** 설정 페이지용 정적 설명. I/O 를 수행하지 않는다. */
   describe(): SourceInfo
+  /**
+   * 이 소스를 유일하게 식별하는 캐시 네임스페이스. 루트/저장소/브랜치를 포함해,
+   * 서로 다른 소스의 같은 상대 경로가 캐시에서 충돌하지 않게 한다. I/O 없음.
+   */
+  cacheKey(): string
   list(): Promise<TreeFile[]>
   readText(relPath: string): Promise<FileContent>
   /** 이미지를 <img src> 로 바로 띄울 수 있는 `data:<mime>;base64,…` URL. */
