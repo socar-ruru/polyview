@@ -17,6 +17,32 @@ Markdown, OpenAPI, TSX, HTML, 이미지, 소스코드를 트리에서 골라 미
 | 이미지(`.png` 등) | 이미지로 표시 |
 | **그 외 모든 확장자** | **Raw 텍스트**(Shiki 구문 하이라이팅) |
 
+## 다운로드 / 설치 (사용자)
+
+소스를 직접 빌드하지 않고 바로 쓰려면 [Releases](https://github.com/socar-ruru/polyview/releases) 에서
+플랫폼에 맞는 파일을 내려받습니다.
+
+### macOS
+
+1. `Polyview_*_aarch64.dmg`(Apple Silicon) 또는 `_x64.dmg`(Intel)를 받아 열고, Polyview 를
+   Applications 로 드래그합니다.
+2. 첫 실행 때 **"확인되지 않은 개발자" 경고**가 뜹니다 — 코드 서명을 하지 않은 빌드라서 그렇습니다.
+   **Polyview.app 을 Control-클릭(우클릭) → 열기 → 열기** 를 한 번만 누르면, 다음부터는 더블클릭으로
+   바로 열립니다.
+   - 그래도 "손상되었습니다"로 막히면 터미널에서 한 번 실행: `xattr -dr com.apple.quarantine /Applications/Polyview.app`
+
+### Windows / Linux
+
+- **Windows**: `.msi` 또는 `.exe` 실행. 미서명이라 SmartScreen 이 막으면 **추가 정보 → 실행**.
+- **Linux**: `.AppImage` 에 실행 권한을 주고 실행하거나 `.deb` 를 설치합니다.
+
+> 경고 없이 바로 열리게 하려면 코드 서명·공증(macOS 는 Apple Developer ID, 연 $99)이 필요합니다.
+> 현재 배포본은 **무서명**이라 위의 1회 우회가 필요합니다.
+
+---
+
+> 아래부터는 **소스에서 직접 빌드·개발**하려는 경우의 안내입니다.
+
 ## 요구사항
 
 - **Node.js 18.18+** (개발 서버 빌드용 Vite 5)
@@ -46,7 +72,7 @@ npm run tauri:build
 
 ## 소스 설정
 
-앱 헤더의 **설정**에서 소스를 지정합니다. 설정은 OS 앱 설정 디렉터리의 `settings.json` 에 저장됩니다.
+**사이드바 왼쪽 아래의 설정 아이콘**(톱니바퀴)에서 소스를 지정합니다. 설정은 OS 앱 설정 디렉터리의 `settings.json` 에 저장됩니다.
 
 - **로컬 디렉터리** — 폴더 선택 버튼으로 뷰어 루트를 고릅니다. 이 디렉터리 하위만 목록·조회되며,
   `.git`·`node_modules`·`.DS_Store` 는 제외됩니다.
@@ -54,7 +80,7 @@ npm run tauri:build
   **Personal Access Token(PAT)** 을 입력합니다. 토큰은 `settings.json` 이 아니라 **OS 키체인**에 따로
   안전하게 보관됩니다.
 
-그 밖에 헤더 제목, 미리보기 최대 파일 크기, 캐시 TTL 도 설정에서 조정할 수 있습니다.
+그 밖에 앱 타이틀(네이티브 윈도우 제목), 본문 글꼴, 미리보기 최대 파일 크기, 캐시 TTL 도 설정에서 조정할 수 있습니다.
 
 ## 동작 방식과 보안
 
