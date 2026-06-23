@@ -24,7 +24,7 @@ Markdown, OpenAPI, TSX, HTML, 이미지, 소스코드를 트리에서 골라 미
 
 ### macOS
 
-1. `Polyview_*_aarch64.dmg`(Apple Silicon) 또는 `_x64.dmg`(Intel)를 받아 열고, Polyview 를
+1. `Polyview_*_universal.dmg`(Intel·Apple Silicon 공용)를 받아 열고, Polyview 를
    Applications 로 드래그합니다.
 2. 첫 실행 때 **"확인되지 않은 개발자" 경고**가 뜹니다 — 코드 서명을 하지 않은 빌드라서 그렇습니다.
    **Polyview.app 을 Control-클릭(우클릭) → 열기 → 열기** 를 한 번만 누르면, 다음부터는 더블클릭으로

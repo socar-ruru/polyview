@@ -1,0 +1,81 @@
+name: release
+
+# v* 태그를 push 하면(예: v0.1.0) 각 플랫폼 빌드를 만들어 GitHub Release(초안)에
+# 자동 첨부한다. 서명/공증은 하지 않는 무료 무서명 빌드다(README 다운로드 안내 참고).
+on:
+  push:
+    tags:
+      - 'v*'
+
+# tauri-action 이 릴리스를 만들고 자산을 올리려면 contents 쓰기 권한이 필요하다.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS 는 universal 바이너리 하나로 Intel·Apple Silicon 모두 커버한다.
+          - platform: macos-latest
+            args: '--target universal-apple-darwin'
+            rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          - platform: ubuntu-22.04
+            args: ''
+            rust-targets: ''
+          - platform: windows-latest
+            args: ''
+            rust-targets: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux 시스템 의존성 설치 (ubuntu 전용)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            curl wget file \
+            libxdo-dev \
+            libssl-dev
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Rust 설치
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - name: Rust 캐시
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 프런트엔드 의존성 설치
+        run: npm ci
+
+      - name: 빌드 + 릴리스 (tauri-action)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Polyview v__VERSION__'
+          releaseBody: |
+            다운로드 후 설치하세요. 무서명 빌드라 macOS 는 처음 실행 시
+            Polyview.app 을 우클릭 → 열기 로 한 번 우회해야 합니다(README 참고).
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
