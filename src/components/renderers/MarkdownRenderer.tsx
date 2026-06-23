@@ -1,4 +1,4 @@
-import { isValidElement, lazy, Suspense, type ReactNode } from 'react'
+import { isValidElement, lazy, memo, Suspense, useMemo, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -38,10 +38,16 @@ function mermaidSource(children: ReactNode): string | null {
   return String(props.children ?? '').replace(/\n$/, '')
 }
 
-/** GitHub 풍 확장, 코드 강조, mermaid 를 포함해 마크다운을 렌더링한다. */
-export function MarkdownRenderer({ content }: { content: string }) {
-  return (
-    <div className="markdown-body w-full">
+/**
+ * GitHub 풍 확장, 코드 강조, mermaid 를 포함해 마크다운을 렌더링한다.
+ *
+ * react-markdown 파싱(remark-gfm + rehype-highlight)은 동기·비용이 커서 content 가
+ * 바뀔 때만 다시 만든다. Viewer 가 더 이상 파일마다 remount 하지 않으므로, 이
+ * memo + useMemo 조합이 테마 토글·부모 리렌더에서의 불필요한 재파싱을 막는다.
+ */
+export const MarkdownRenderer = memo(function MarkdownRenderer({ content }: { content: string }) {
+  const tree = useMemo(
+    () => (
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeHighlight, { detect: true, ignoreMissing: true }]]}
@@ -49,6 +55,8 @@ export function MarkdownRenderer({ content }: { content: string }) {
       >
         {content}
       </ReactMarkdown>
-    </div>
+    ),
+    [content],
   )
-}
+  return <div className="markdown-body w-full">{tree}</div>
+})

@@ -124,7 +124,7 @@ function Loaded({
           스펙은 렌더링되고 나머지는 원본 텍스트로 보여집니다.
         </Notice>
       ) : file ? (
-        <Viewer key={file.path} file={file} />
+        <Viewer file={file} />
       ) : (
         <Centered>파일을 여는 중…</Centered>
       )}

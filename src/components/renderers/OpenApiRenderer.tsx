@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { lazy, memo, Suspense, useMemo } from 'react'
 import { useColorScheme } from '@/lib/theme'
 import '@scalar/api-reference-react/style.css'
 
@@ -13,7 +13,7 @@ const ApiReferenceReact = lazy(() =>
  * 인터랙티브 요청 클라이언트를 제거하여, 뷰어가 사용자 머신에서 내부 API 서버로
  * 요청을 보내지 않도록 한다.
  */
-export function OpenApiRenderer({ content }: { content: string }) {
+export const OpenApiRenderer = memo(function OpenApiRenderer({ content }: { content: string }) {
   const scheme = useColorScheme()
   // Scalar(무거움)가 콘텐츠나 테마 변경 시에만 재렌더링되도록 메모이제이션한다.
   const configuration = useMemo(
@@ -33,4 +33,4 @@ export function OpenApiRenderer({ content }: { content: string }) {
       </Suspense>
     </div>
   )
-}
+})

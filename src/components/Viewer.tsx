@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { RenderKind } from '@/lib/extensions'
 import { formatBytes } from '@/lib/format'
 import { basename } from '@/lib/paths'
@@ -25,9 +25,17 @@ type DataTab = 'raw' | 'openapi'
 
 export function Viewer({ file }: { file: ViewerFile }) {
   const showTabs = file.kind === 'data' && file.isOpenApi === true
-  // OpenAPI 스펙은 기본으로 렌더링된 OpenAPI 뷰로 열린다. Viewer 는
-  // file.path 를 key 로 사용하므로 이 초기값은 파일마다 재평가된다.
+  // OpenAPI 스펙은 기본으로 렌더링된 OpenAPI 뷰로 열린다.
   const [tab, setTab] = useState<DataTab>(file.isOpenApi === true ? 'openapi' : 'raw')
+
+  // Viewer 는 더 이상 file.path 를 key 로 remount 하지 않는다(무거운 렌더러 재마운트
+  // 방지). 대신 파일이 바뀌면 탭만 기본값으로 되돌린다 — setState-during-render
+  // 패턴이라 커밋 전에 즉시 재조정되어 깜빡임이 없다.
+  const prevPath = useRef(file.path)
+  if (prevPath.current !== file.path) {
+    prevPath.current = file.path
+    setTab(file.isOpenApi === true ? 'openapi' : 'raw')
+  }
 
   return (
     <div className="flex h-full flex-col">
