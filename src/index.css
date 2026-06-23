@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GitHub Primer palette as RGB channels so Tailwind `/<alpha>` works. */
+:root {
+  color-scheme: light;
+  /* 본문 기본 글꼴 — OS 네이티브 시스템 폰트 스택. 설정의 글꼴 값이 있으면
+     settings-context 가 이 변수를 덮어쓴다(비어 있으면 이 기본값 사용). */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif;
+  --canvas: 255 255 255;
+  --subtle: 246 248 250;
+  --inset: 234 238 242;
+  --line: 208 215 222;
+  --fg: 31 35 40;
+  --muted: 89 99 110;
+  --accent: 9 105 218;
+  --hover: 208 215 222;
+  --error: 207 34 46;
+  /* highlight.js token colors (markdown code blocks) — GitHub light */
+  --hl-comment: #6e7781;
+  --hl-keyword: #cf222e;
+  --hl-string: #0a3069;
+  --hl-title: #8250df;
+  --hl-number: #0550ae;
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: 13 17 23;
+  --subtle: 22 27 34;
+  --inset: 22 27 34; /* dark Primer collapses inset/subtle to one surface */
+  --line: 48 54 61;
+  --fg: 230 237 243;
+  --muted: 139 148 158;
+  --accent: 47 129 247;
+  --hover: 48 54 61;
+  --error: 255 123 114;
+  /* highlight.js token colors — GitHub dark */
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-title: #d2a8ff;
+  --hl-number: #79c0ff;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-fg antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Markdown rendering ------------------------------------------------------- */
+.markdown-body {
+  @apply text-[15px] leading-7 text-fg;
+}
+.markdown-body h1 {
+  @apply mb-4 mt-8 border-b border-line pb-2 text-3xl font-bold;
+}
+.markdown-body h2 {
+  @apply mb-3 mt-7 border-b border-line pb-1.5 text-2xl font-semibold;
+}
+.markdown-body h3 {
+  @apply mb-2 mt-6 text-xl font-semibold;
+}
+.markdown-body p {
+  @apply my-4;
+}
+.markdown-body ul {
+  @apply my-4 list-disc pl-6;
+}
+.markdown-body ol {
+  @apply my-4 list-decimal pl-6;
+}
+.markdown-body li {
+  @apply my-1;
+}
+.markdown-body a {
+  @apply text-accent underline;
+}
+.markdown-body blockquote {
+  @apply my-4 border-l-4 border-line pl-4 text-muted;
+}
+.markdown-body code {
+  @apply rounded bg-inset px-1.5 py-0.5 font-mono text-[13px];
+}
+.markdown-body pre {
+  @apply my-4 overflow-x-auto rounded-lg bg-subtle p-4 text-[13px];
+}
+.markdown-body pre code {
+  @apply bg-transparent p-0;
+}
+.markdown-body table {
+  @apply my-4 w-full border-collapse text-sm;
+}
+.markdown-body th,
+.markdown-body td {
+  @apply border border-line px-3 py-1.5 text-left;
+}
+.markdown-body img {
+  @apply max-w-full;
+}
+
+/* highlight.js theme for markdown code blocks (var-based, flips with .dark) -- */
+.markdown-body .hljs {
+  color: rgb(var(--fg));
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--hl-comment);
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type,
+.hljs-built_in,
+.hljs-name,
+.hljs-tag {
+  color: var(--hl-keyword);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-char.escape_,
+.hljs-meta .hljs-string {
+  color: var(--hl-string);
+}
+.hljs-title,
+.hljs-section,
+.hljs-title.function_,
+.hljs-title.class_ {
+  color: var(--hl-title);
+}
+.hljs-number,
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-meta,
+.hljs-template-variable {
+  color: var(--hl-number);
+}
+.hljs-deletion {
+  color: var(--hl-keyword);
+}
+.hljs-addition {
+  color: var(--hl-title);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 600;
+}
+
+/* Shiki dual-theme (code view): light is inline; flip to the dark var under .dark */
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark) !important;
+}
+
+/* Scalar(OpenAPI 뷰) ------------------------------------------------------- */
+/* Scalar 는 오퍼레이션 섹션에 tabindex="-1" 을 달아 사이드바 네비 시
+   프로그램적으로 포커스한다. 그러면 전역 :focus-visible 규칙이 1px accent
+   outline 을 그리는데, 섹션이 뷰포트보다 크고 overflow-auto 로 잘려 왼쪽
+   변만 파란 세로선처럼 남는다. 스크립트로만 포커스되는 컨테이너(tabindex=-1)의
+   포커스 링만 제거한다 — 버튼·인풋 등 실제 컨트롤의 키보드 포커스 표시는 유지. */
+.scalar-app [tabindex='-1']:focus-visible,
+.scalar-app [tabindex='-1']:focus {
+  outline: none;
+}
+
+/* Scalar 콘텐츠 패널 스크롤 ------------------------------------------------
+   Scalar 의 .references-layout 은 min-height:100dvh 그리드로, 콘텐츠 행이
+   `auto`(내용 높이)이고 콘텐츠 셀(.references-rendered)에는 자체 overflow 가
+   없다. 즉 문서(window) 스크롤을 전제로 설계됐다. 사이드바도 height:
+   calc(100dvh - header) 로 뷰포트에 고정돼 있다. 우리는 Scalar 를 앱 내부의
+   고정 높이 패널에 임베드하므로 이대로면 콘텐츠가 패널을 넘쳐도 스크롤되지
+   않고 잘리거나, 앱 전체(웹뷰 body)가 스크롤되어 헤더·파일목록까지 함께
+   밀려난다.
+   Scalar 가 .scalar-app 아래 여러 래퍼 div 를 두기 때문에 height:100% 체인은
+   중간에서 끊긴다. 그래서 그리드(.references-layout)를 호스트 패널
+   (.openapi-host, position:relative)에 absolute(inset:0)로 고정해 패널 높이를
+   확정시킨다 — 중간 래퍼의 height 에 의존하지 않는다. 그 위에서 콘텐츠 행을
+   minmax(0,1fr) 로 잡아 콘텐츠 셀에 자체 overflow-y:auto 스크롤을 부여하고,
+   사이드바도 셀 높이(100%)에 맞춰 자체 스크롤이 패널 안에서 끝나도록 한다. */
+.openapi-host .references-layout {
+  position: absolute !important;
+  inset: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  grid-template-rows: var(--scalar-header-height, 0px) minmax(0, 1fr) auto !important;
+}
+.openapi-host .references-rendered {
+  min-height: 0;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+.openapi-host .references-navigation,
+.openapi-host .references-navigation-list {
+  height: 100% !important;
+  min-height: 0 !important;
+}

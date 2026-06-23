@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polyview</title>
+    <script>
+      // 첫 페인트 전에 .dark 클래스를 적용해 테마 깜빡임(FOUC)을 막는다.
+      // 저장 키는 src/lib/theme.tsx 의 STORAGE_KEY 와 일치해야 한다.
+      (function () {
+        try {
+          var t = localStorage.getItem('polyview-theme') || 'system'
+          var dark =
+            t === 'dark' ||
+            (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+        } catch (e) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,82 +1,31 @@
-import * as esbuild from 'esbuild'
+import { transform } from 'sucrase'
 
 /**
- * Bundles a standalone .tsx file (plus React and any whitelisted dependency that
- * is installed in node_modules) into a single self-contained IIFE that mounts
- * the file's default export into <div id="root">.
+ * 단일 .tsx 파일을 브라우저에서 바로 실행 가능한 CommonJS 로 변환한다.
  *
- * The compile happens entirely inside the container — no code ever leaves the
- * deployment — which is the whole point of choosing esbuild over a hosted
- * bundler for private content.
+ * esbuild 처럼 번들링(모듈 해석)을 하지 않고 Sucrase 로 **변환만** 한다.
+ * - TypeScript 제거 + JSX(classic) → `React.createElement`
+ * - ESM import/export → CommonJS `require`/`exports`
+ *
+ * 변환 결과는 `require`/`module`/`exports` 가 주어진 스코프에서 실행되어야 하며,
+ * 'react' / 'react-dom' 은 샌드박스 iframe 에 주입된 React UMD 전역으로 연결된다
+ * (TsxRenderer 참고). 컴파일은 전적으로 로컬에서 일어나 오프라인으로 동작한다.
  */
-export async function compileTsx(source: string): Promise<{ js: string } | { error: string }> {
+export function compileTsx(source: string): { js: string } | { error: string } {
   try {
-    const result = await esbuild.build({
-      stdin: {
-        contents: BOOTSTRAP,
-        loader: 'tsx',
-        resolveDir: process.cwd(),
-      },
-      bundle: true,
-      format: 'iife',
-      platform: 'browser',
-      target: 'es2020',
-      minify: true,
-      write: false,
-      logLevel: 'silent',
-      jsx: 'automatic',
-      define: { 'process.env.NODE_ENV': '"production"' },
-      plugins: [virtualUserModule(source)],
+    const { code } = transform(source, {
+      transforms: ['typescript', 'jsx', 'imports'],
+      jsxRuntime: 'classic',
+      production: true,
     })
-    return { js: result.outputFiles[0].text }
+    return { js: code }
   } catch (err) {
-    return { error: formatBuildError(err) }
+    return { error: formatError(err) }
   }
 }
 
-const VIRTUAL_ID = 'virtual:user-component'
-const VIRTUAL_ID_FILTER = new RegExp(`^${VIRTUAL_ID}$`)
-
-const BOOTSTRAP = `
-  import React from 'react'
-  import { createRoot } from 'react-dom/client'
-  import Component from '${VIRTUAL_ID}'
-
-  const el = document.getElementById('root')
-  if (el) {
-    createRoot(el).render(React.createElement(React.StrictMode, null, React.createElement(Component)))
-  }
-`
-
-/** Resolves the bootstrap's import of the user component to the uploaded source. */
-function virtualUserModule(source: string): esbuild.Plugin {
-  return {
-    name: 'virtual-user-module',
-    setup(build) {
-      build.onResolve({ filter: VIRTUAL_ID_FILTER }, () => ({
-        path: VIRTUAL_ID,
-        namespace: 'virtual',
-      }))
-      build.onLoad({ filter: /.*/, namespace: 'virtual' }, () => ({
-        contents: source,
-        loader: 'tsx',
-        resolveDir: process.cwd(),
-      }))
-    },
-  }
-}
-
-function formatBuildError(err: unknown): string {
-  if (err && typeof err === 'object' && 'errors' in err) {
-    const errors = (err as esbuild.BuildFailure).errors
-    if (Array.isArray(errors) && errors.length) {
-      return errors
-        .map((e) => {
-          const loc = e.location ? ` (line ${e.location.line})` : ''
-          return `${e.text}${loc}`
-        })
-        .join('\n')
-    }
-  }
-  return err instanceof Error ? err.message : String(err)
+/** Sucrase 파싱 에러를 줄 번호 포함 한 줄 메시지로 정리한다. */
+function formatError(err: unknown): string {
+  if (err instanceof Error) return err.message
+  return String(err)
 }

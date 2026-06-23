@@ -1,9 +1,0 @@
-node_modules
-.next
-.git
-.env
-.env.local
-Dockerfile
-docker-compose.yml
-*.md
-.DS_Store
