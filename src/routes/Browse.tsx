@@ -8,7 +8,7 @@ import { cached } from '@/lib/cache'
 import { errorMessage } from '@/lib/format'
 import { basename } from '@/lib/paths'
 import { DEFAULT_APP_TITLE } from '@/lib/constants'
-import { DEFAULT_SETTINGS } from '@/lib/settings'
+import { type AppSettings, DEFAULT_SETTINGS } from '@/lib/settings'
 import { useSettings } from '@/lib/settings-context'
 import { AppHeader } from '@/components/AppHeader'
 import { FileTree } from '@/components/FileTree'
@@ -23,6 +23,7 @@ export function Browse() {
   const params = useParams()
   const path = params['*'] ?? ''
   const title = settings?.appTitle || DEFAULT_APP_TITLE
+  const sourceLabel = settings ? sourceLabelOf(settings) : undefined
 
   // 선택된 파일명을 네이티브 윈도우 타이틀에 반영한다(미션 컨트롤·창 전환에서
   // 네이티브 앱처럼 보이도록). 파일이 없으면 앱 타이틀만 표시.
@@ -53,20 +54,32 @@ export function Browse() {
       source={source}
       path={path}
       title={title}
+      sourceLabel={sourceLabel}
       ttl={settings?.cacheTtlSeconds ?? DEFAULT_SETTINGS.cacheTtlSeconds}
     />
   )
+}
+
+/** 활성 소스를 사이드바 상단에 보여줄 짧은 라벨로 만든다. */
+function sourceLabelOf(settings: AppSettings): string {
+  if (settings.sourceType === 'github') {
+    return settings.github.repo ? `GitHub · ${settings.github.repo}` : 'GitHub'
+  }
+  const root = settings.local.root.trim()
+  return root ? `Local · ${basename(root) || root}` : 'Local'
 }
 
 function Loaded({
   source,
   path,
   title,
+  sourceLabel,
   ttl,
 }: {
   source: Source
   path: string
   title: string
+  sourceLabel?: string
   ttl: number
 }) {
   const [files, setFiles] = useState<TreeFile[] | null>(null)
@@ -127,7 +140,13 @@ function Loaded({
   return (
     <Shell
       title={title}
-      sidebar={files ? <FileTree files={files} currentPath={path} /> : <SidebarLoading />}
+      sidebar={
+        files ? (
+          <FileTree files={files} currentPath={path} sourceLabel={sourceLabel} />
+        ) : (
+          <SidebarLoading />
+        )
+      }
     >
       {pending && file && <TopLoadingBar />}
       {!path ? (
@@ -180,6 +199,7 @@ async function readFile(source: Source, path: string): Promise<ViewerFile> {
     kind,
     content: text,
     size,
+    lineCount: text.split('\n').length,
     isOpenApi: kind === 'data' && isOpenApiDocument(text),
     highlightedHtml,
   }
