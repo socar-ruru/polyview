@@ -164,3 +164,47 @@ body {
 .dark .shiki span {
   color: var(--shiki-dark) !important;
 }
+
+/* Scalar(OpenAPI 뷰) ------------------------------------------------------- */
+/* Scalar 는 오퍼레이션 섹션에 tabindex="-1" 을 달아 사이드바 네비 시
+   프로그램적으로 포커스한다. 그러면 전역 :focus-visible 규칙이 1px accent
+   outline 을 그리는데, 섹션이 뷰포트보다 크고 overflow-auto 로 잘려 왼쪽
+   변만 파란 세로선처럼 남는다. 스크립트로만 포커스되는 컨테이너(tabindex=-1)의
+   포커스 링만 제거한다 — 버튼·인풋 등 실제 컨트롤의 키보드 포커스 표시는 유지. */
+.scalar-app [tabindex='-1']:focus-visible,
+.scalar-app [tabindex='-1']:focus {
+  outline: none;
+}
+
+/* Scalar 콘텐츠 패널 스크롤 ------------------------------------------------
+   Scalar 의 .references-layout 은 min-height:100dvh 그리드로, 콘텐츠 행이
+   `auto`(내용 높이)이고 콘텐츠 셀(.references-rendered)에는 자체 overflow 가
+   없다. 즉 문서(window) 스크롤을 전제로 설계됐다. 사이드바도 height:
+   calc(100dvh - header) 로 뷰포트에 고정돼 있다. 우리는 Scalar 를 앱 내부의
+   고정 높이 패널에 임베드하므로 이대로면 콘텐츠가 패널을 넘쳐도 스크롤되지
+   않고 잘리거나, 앱 전체(웹뷰 body)가 스크롤되어 헤더·파일목록까지 함께
+   밀려난다.
+   Scalar 가 .scalar-app 아래 여러 래퍼 div 를 두기 때문에 height:100% 체인은
+   중간에서 끊긴다. 그래서 그리드(.references-layout)를 호스트 패널
+   (.openapi-host, position:relative)에 absolute(inset:0)로 고정해 패널 높이를
+   확정시킨다 — 중간 래퍼의 height 에 의존하지 않는다. 그 위에서 콘텐츠 행을
+   minmax(0,1fr) 로 잡아 콘텐츠 셀에 자체 overflow-y:auto 스크롤을 부여하고,
+   사이드바도 셀 높이(100%)에 맞춰 자체 스크롤이 패널 안에서 끝나도록 한다. */
+.openapi-host .references-layout {
+  position: absolute !important;
+  inset: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  grid-template-rows: var(--scalar-header-height, 0px) minmax(0, 1fr) auto !important;
+}
+.openapi-host .references-rendered {
+  min-height: 0;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+.openapi-host .references-navigation,
+.openapi-host .references-navigation-list {
+  height: 100% !important;
+  min-height: 0 !important;
+}
