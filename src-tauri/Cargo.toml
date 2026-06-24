@@ -1,6 +1,6 @@
 [package]
 name = "polyview"
-version = "0.1.1"
+version = "0.1.2"
 description = "Polyview — render markdown, OpenAPI, TSX and more from a local directory or GitHub repo"
 authors = ["ruru"]
 edition = "2021"
