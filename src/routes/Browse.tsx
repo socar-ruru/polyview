@@ -26,6 +26,9 @@ export function Browse() {
   const path = params['*'] ?? ''
   const title = settings?.appTitle || DEFAULT_APP_TITLE
   const sourceLabel = settings ? sourceLabelOf(settings) : undefined
+  // 로컬 소스일 때만 파일 경로 동작(복사·Finder)을 켜기 위한 루트 경로.
+  const localRoot =
+    settings?.sourceType === 'local' && settings.local.root ? settings.local.root : undefined
 
   // 선택된 파일명을 네이티브 윈도우 타이틀에 반영한다(미션 컨트롤·창 전환에서
   // 네이티브 앱처럼 보이도록). 파일이 없으면 앱 타이틀만 표시.
@@ -56,6 +59,7 @@ export function Browse() {
       source={source}
       path={path}
       sourceLabel={sourceLabel}
+      localRoot={localRoot}
       ttl={settings?.cacheTtlSeconds ?? DEFAULT_SETTINGS.cacheTtlSeconds}
     />
   )
@@ -74,11 +78,13 @@ function Loaded({
   source,
   path,
   sourceLabel,
+  localRoot,
   ttl,
 }: {
   source: Source
   path: string
   sourceLabel?: string
+  localRoot?: string
   ttl: number
 }) {
   const [files, setFiles] = useState<TreeFile[] | null>(null)
@@ -140,7 +146,12 @@ function Loaded({
     <Shell
       sidebar={
         files ? (
-          <FileTree files={files} currentPath={path} sourceLabel={sourceLabel} />
+          <FileTree
+            files={files}
+            currentPath={path}
+            sourceLabel={sourceLabel}
+            localRoot={localRoot}
+          />
         ) : (
           <SidebarLoading />
         )
@@ -153,7 +164,7 @@ function Loaded({
           스펙은 렌더링되고 나머지는 원본 텍스트로 보여집니다.
         </Notice>
       ) : file ? (
-        <Viewer file={file} />
+        <Viewer file={file} localRoot={localRoot} />
       ) : (
         <Centered>파일을 여는 중…</Centered>
       )}

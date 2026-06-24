@@ -1,9 +1,11 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { RenderKind } from '@/lib/extensions'
 import { extensionOf } from '@/lib/extensions'
 import { formatBytes } from '@/lib/format'
 import { basename } from '@/lib/paths'
 import { ChevronRightIcon } from '@/components/icons'
+import { useContextMenu } from '@/components/ContextMenu'
+import { localFileMenuItems } from '@/lib/local-actions'
 import { MarkdownRenderer } from '@/components/renderers/MarkdownRenderer'
 import { HtmlRenderer } from '@/components/renderers/HtmlRenderer'
 import { TsxRenderer } from '@/components/renderers/TsxRenderer'
@@ -27,10 +29,20 @@ export interface ViewerFile {
 
 type DataTab = 'raw' | 'openapi'
 
-export function Viewer({ file }: { file: ViewerFile }) {
+export function Viewer({ file, localRoot }: { file: ViewerFile; localRoot?: string }) {
   const showTabs = file.kind === 'data' && file.isOpenApi === true
   // OpenAPI 스펙은 기본으로 렌더링된 OpenAPI 뷰로 열린다.
   const [tab, setTab] = useState<DataTab>(file.isOpenApi === true ? 'openapi' : 'raw')
+  const { open, menu } = useContextMenu()
+
+  // 로컬 연결일 때, 헤더(브레드크럼)에서 현재 파일에 경로 복사·Finder 메뉴를 띄운다.
+  const onHeaderContextMenu = useCallback(
+    (e: ReactMouseEvent<HTMLElement>) => {
+      if (!localRoot) return
+      open(e, localFileMenuItems(localRoot, file.path))
+    },
+    [localRoot, file.path, open],
+  )
 
   // Viewer 는 더 이상 file.path 를 key 로 remount 하지 않는다(무거운 렌더러 재마운트
   // 방지). 대신 파일이 바뀌면 탭만 기본값으로 되돌린다 — setState-during-render
@@ -50,7 +62,7 @@ export function Viewer({ file }: { file: ViewerFile }) {
         data-tauri-drag-region
         className="flex h-11 shrink-0 items-center justify-between gap-3 border-b border-line px-4"
       >
-        <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex min-w-0 items-center gap-2.5" onContextMenu={onHeaderContextMenu}>
           <Breadcrumb path={file.path} />
           <TypeBadge file={file} />
         </div>
@@ -60,6 +72,7 @@ export function Viewer({ file }: { file: ViewerFile }) {
         <Body file={file} tab={tab} />
       </div>
       <StatusBar file={file} />
+      {menu}
     </div>
   )
 }

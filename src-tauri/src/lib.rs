@@ -25,6 +25,11 @@ fn read_base64(root: String, rel: String) -> Result<String, ApiError> {
     local::read_base64(&root, &rel)
 }
 
+#[tauri::command]
+fn reveal_path(root: String, rel: String) -> Result<(), ApiError> {
+    local::reveal(&root, &rel)
+}
+
 // ─── 설정 + 비밀 토큰 ────────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -56,12 +61,14 @@ fn set_github_token(token: Option<String>) -> Result<(), ApiError> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .menu(|handle| build_menu(handle))
         .on_menu_event(|app, event| handle_menu_event(app, event))
         .invoke_handler(tauri::generate_handler![
             list_dir,
             read_text,
             read_base64,
+            reveal_path,
             get_settings,
             set_settings,
             get_github_token,

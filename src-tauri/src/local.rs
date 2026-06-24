@@ -5,6 +5,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::Serialize;
@@ -55,6 +56,13 @@ pub fn read_base64(root: &str, rel: &str) -> Result<String, ApiError> {
     file_size(&abs, rel)?; // 존재하는 일반 파일인지 확인
     let bytes = fs::read(&abs).map_err(|_| ApiError::not_found(rel))?;
     Ok(STANDARD.encode(bytes))
+}
+
+/// 파일을 OS 파일 관리자(Finder 등)에서 선택한 채로 연다. resolve_safe 로 루트
+/// 안에 실제로 존재하는 파일인지 확인한 뒤 연다(로컬 소스에서만 호출된다).
+pub fn reveal(root: &str, rel: &str) -> Result<(), ApiError> {
+    let abs = resolve_safe(root, rel)?;
+    reveal_in_file_manager(&abs)
 }
 
 // ─── 내부 구현 ───────────────────────────────────────────────────────────────
@@ -154,4 +162,37 @@ fn to_posix_rel(root: &Path, abs: &Path) -> String {
         .unwrap_or(abs)
         .to_string_lossy()
         .replace('\\', "/")
+}
+
+/// 파일을 선택한 상태로 OS 파일 관리자를 연다(플랫폼별). 결과를 기다리지 않고
+/// 띄우기만 한다 — explorer 처럼 성공해도 비정상 종료코드를 내는 경우가 있어서다.
+#[cfg(target_os = "macos")]
+fn reveal_in_file_manager(abs: &Path) -> Result<(), ApiError> {
+    Command::new("open")
+        .arg("-R")
+        .arg(abs)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| ApiError::io(e.to_string()))
+}
+
+#[cfg(target_os = "windows")]
+fn reveal_in_file_manager(abs: &Path) -> Result<(), ApiError> {
+    // explorer 는 파일을 선택한 채로 연다. `/select,<path>` 를 한 인자로 붙인다.
+    Command::new("explorer")
+        .arg(format!("/select,{}", abs.display()))
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| ApiError::io(e.to_string()))
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn reveal_in_file_manager(abs: &Path) -> Result<(), ApiError> {
+    // Linux 등: 파일 선택 표준이 없어 상위 디렉터리를 연다.
+    let dir = abs.parent().unwrap_or(abs);
+    Command::new("xdg-open")
+        .arg(dir)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| ApiError::io(e.to_string()))
 }

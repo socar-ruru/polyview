@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { TreeFile } from '@/lib/sources'
 import { basename } from '@/lib/paths'
 import { ChevronRightIcon, FileTypeIcon, FolderIcon, SearchIcon } from '@/components/icons'
+import { useContextMenu } from '@/components/ContextMenu'
+import { localFileMenuItems } from '@/lib/local-actions'
 
 interface DirNode {
   name: string
@@ -16,19 +18,36 @@ export function FileTree({
   files,
   currentPath,
   sourceLabel,
+  localRoot,
 }: {
   files: TreeFile[]
   currentPath: string
   /** 사이드바 상단에 표시할 활성 소스 라벨(예: "Local · docs"). */
   sourceLabel?: string
+  /** 로컬 소스의 루트 경로. 있으면(=로컬 연결) 파일 우클릭 메뉴를 제공한다. */
+  localRoot?: string
 }) {
   const [query, setQuery] = useState('')
   const root = useMemo(() => buildTree(files), [files])
+  const { open, menu } = useContextMenu()
 
   const trimmed = query.trim().toLowerCase()
   const matches = trimmed
     ? files.filter((f) => f.path.toLowerCase().includes(trimmed))
     : null
+
+  // 로컬 연결일 때만, 우클릭한 파일 행(data-filepath)에 경로 복사·Finder 메뉴를 띄운다.
+  const handleContextMenu = useCallback(
+    (e: ReactMouseEvent<HTMLElement>) => {
+      if (!localRoot) return
+      const rel = (e.target as HTMLElement)
+        .closest('[data-filepath]')
+        ?.getAttribute('data-filepath')
+      if (!rel) return
+      open(e, localFileMenuItems(localRoot, rel))
+    },
+    [localRoot, open],
+  )
 
   return (
     <div className="flex h-full flex-col">
@@ -48,13 +67,17 @@ export function FileTree({
           {sourceLabel}
         </div>
       )}
-      <nav className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-3 text-sm">
+      <nav
+        className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-3 text-sm"
+        onContextMenu={handleContextMenu}
+      >
         {matches ? (
           <FlatList files={matches} currentPath={currentPath} />
         ) : (
           <DirView node={root} currentPath={currentPath} depth={0} />
         )}
       </nav>
+      {menu}
     </div>
   )
 }
@@ -142,6 +165,7 @@ function FileLink({
       }`}
       style={{ paddingLeft: indent(depth) + FILE_INDENT_OFFSET }}
       title={path}
+      data-filepath={path}
     >
       <FileTypeIcon path={path} className="h-4 w-4 shrink-0" />
       <span className="min-w-0 flex-1 truncate">{label}</span>
