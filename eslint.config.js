@@ -34,10 +34,14 @@ export default tseslint.config(
       ],
     },
   },
-  // React Context 프로바이더 파일은 프로바이더 컴포넌트와 훅을 한 파일에 두는 게
-  // 관용적이므로 Fast Refresh 경고(only-export-components)를 적용하지 않는다.
+  // 컴포넌트와 훅을 한 파일에 두는 게 관용적인 곳(Context 프로바이더, 컨텍스트
+  // 메뉴 훅)은 Fast Refresh 경고(only-export-components)를 적용하지 않는다.
   {
-    files: ['src/lib/theme.tsx', 'src/lib/settings-context.tsx'],
+    files: [
+      'src/lib/theme.tsx',
+      'src/lib/settings-context.tsx',
+      'src/components/ContextMenu.tsx',
+    ],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
   // 설정 파일은 Node 환경에서 돈다.
