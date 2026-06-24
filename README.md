@@ -106,6 +106,11 @@ npm run build   # tsc 타입체크 + vite 빌드
 npm run lint    # ESLint (경고 0)
 ```
 
+## 로드맵
+
+제품 비전과 향후 방향(**공유 기능**, SSOT/RAG 지식화, 코드 서명 등)·핵심 설계 결정은
+[ROADMAP.md](ROADMAP.md) 에 정리해 두었습니다.
+
 ## 라이선스
 
 MIT
