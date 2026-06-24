@@ -1,9 +1,9 @@
 name: release
 
-# 두 가지 방법으로 릴리스를 만든다(둘 다 무서명 빌드 → 초안 릴리스):
-#  1) v* 태그를 직접 push.
-#  2) Actions 의 "Run workflow"(workflow_dispatch) — patch/minor/major 만 고르면
-#     prepare 잡이 버전 bump + main 커밋 + 태그까지 자동으로 만든다(원클릭).
+# 두 가지 방법으로 릴리스(둘 다 무서명 빌드 → 초안):
+#  1) v* 태그 직접 push.
+#  2) Actions "Run workflow"(workflow_dispatch) — patch/minor/major 만 고르면
+#     prepare 잡이 버전 bump + main 커밋 + 태그까지 자동 생성(원클릭).
 on:
   push:
     tags:
@@ -16,14 +16,12 @@ on:
         options: [patch, minor, major]
         default: patch
 
-# 버전 커밋·태그 push 와 릴리스 자산 업로드에 contents 쓰기 권한이 필요하다.
 permissions:
   contents: write
 
 jobs:
-  # workflow_dispatch 일 때만: 버전을 올리고 main 에 커밋 + 태그를 만들어 push 한다.
-  # (GITHUB_TOKEN 이 push 한 태그는 다른 워크플로를 트리거하지 않으므로, 빌드는
-  #  같은 실행의 release 잡이 prepare 뒤에 이어서 수행한다 — 중복 빌드 없음.)
+  # workflow_dispatch 일 때만: 버전을 올리고 main 에 커밋 + 태그를 push.
+  # (GITHUB_TOKEN 이 push 한 태그는 다른 워크플로를 트리거하지 않으므로 중복 빌드 없음.)
   prepare:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -34,7 +32,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
       - name: 버전 bump + 커밋 + 태그
         id: bump
         run: |
@@ -58,11 +55,40 @@ jobs:
           git push origin main
           git push origin "v$NEW"
 
-  release:
+  # 매트릭스 빌드 전에 릴리스(초안)를 한 번만 만든다. 여러 플랫폼 잡이 동시에
+  # 릴리스를 생성하려다 경쟁해 중복 릴리스로 쪼개지는 것을 막는다(빌드는 이 한
+  # 릴리스에 자산만 업로드한다).
+  create-release:
     needs: [prepare]
-    # 태그 push 면 prepare 가 skip 되어 needs 결과는 skipped 가 된다. always() 로
-    # 진행하되, dispatch 일 때는 prepare 성공만 통과시킨다.
     if: always() && (github.event_name == 'push' || needs.prepare.result == 'success')
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      release_id: ${{ steps.create.outputs.result }}
+    steps:
+      - name: 태그 결정
+        id: meta
+        run: echo "tag=${{ needs.prepare.outputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+      - name: 초안 릴리스 생성
+        id: create
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = "${{ steps.meta.outputs.tag }}";
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `Polyview ${tag}`,
+              body: '다운로드 후 설치하세요. 무서명 빌드라 macOS 는 처음 실행 시 Polyview.app 을 우클릭 → 열기 로 한 번 우회해야 합니다(README 참고).',
+              draft: true,
+              prerelease: false,
+            });
+            return data.id;
+
+  build:
+    needs: [create-release]
+    if: always() && needs.create-release.result == 'success'
     strategy:
       fail-fast: false
       matrix:
@@ -83,8 +109,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # dispatch 면 prepare 가 만든 새 태그를, 태그 push 면 그 태그를 체크아웃.
-          ref: ${{ needs.prepare.outputs.tag || github.ref_name }}
+          ref: ${{ needs.create-release.outputs.tag }}
 
       - name: Linux 시스템 의존성 설치 (ubuntu 전용)
         if: matrix.platform == 'ubuntu-22.04'
@@ -119,16 +144,10 @@ jobs:
       - name: 프런트엔드 의존성 설치
         run: npm ci
 
-      - name: 빌드 + 릴리스 (tauri-action)
+      - name: 빌드 + 자산 업로드 (tauri-action)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ needs.prepare.outputs.tag || github.ref_name }}
-          releaseName: 'Polyview v__VERSION__'
-          releaseBody: |
-            다운로드 후 설치하세요. 무서명 빌드라 macOS 는 처음 실행 시
-            Polyview.app 을 우클릭 → 열기 로 한 번 우회해야 합니다(README 참고).
-          releaseDraft: true
-          prerelease: false
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}
