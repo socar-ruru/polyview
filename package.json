@@ -1,6 +1,6 @@
 {
   "name": "polyview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Desktop viewer that renders markdown, OpenAPI, TSX and more from a local directory or GitHub repo.",
