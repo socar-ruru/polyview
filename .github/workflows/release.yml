@@ -1,18 +1,68 @@
 name: release
 
-# v* 태그를 push 하면(예: v0.1.0) 각 플랫폼 빌드를 만들어 GitHub Release(초안)에
-# 자동 첨부한다. 서명/공증은 하지 않는 무료 무서명 빌드다(README 다운로드 안내 참고).
+# 두 가지 방법으로 릴리스를 만든다(둘 다 무서명 빌드 → 초안 릴리스):
+#  1) v* 태그를 직접 push.
+#  2) Actions 의 "Run workflow"(workflow_dispatch) — patch/minor/major 만 고르면
+#     prepare 잡이 버전 bump + main 커밋 + 태그까지 자동으로 만든다(원클릭).
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: '버전 증가 단위'
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 
-# tauri-action 이 릴리스를 만들고 자산을 올리려면 contents 쓰기 권한이 필요하다.
+# 버전 커밋·태그 push 와 릴리스 자산 업로드에 contents 쓰기 권한이 필요하다.
 permissions:
   contents: write
 
 jobs:
+  # workflow_dispatch 일 때만: 버전을 올리고 main 에 커밋 + 태그를 만들어 push 한다.
+  # (GITHUB_TOKEN 이 push 한 태그는 다른 워크플로를 트리거하지 않으므로, 빌드는
+  #  같은 실행의 release 잡이 prepare 뒤에 이어서 수행한다 — 중복 빌드 없음.)
+  prepare:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 버전 bump + 커밋 + 태그
+        id: bump
+        run: |
+          cur=$(node -p "require('./package.json').version")
+          IFS='.' read -r MA MI PA <<< "$cur"
+          case "${{ inputs.bump }}" in
+            major) MA=$((MA + 1)); MI=0; PA=0 ;;
+            minor) MI=$((MI + 1)); PA=0 ;;
+            patch) PA=$((PA + 1)) ;;
+          esac
+          NEW="$MA.$MI.$PA"
+          echo "tag=v$NEW" >> "$GITHUB_OUTPUT"
+          sed -i "s/\"version\": \"[0-9][0-9.]*\"/\"version\": \"$NEW\"/" package.json
+          sed -i "s/\"version\": \"[0-9][0-9.]*\"/\"version\": \"$NEW\"/" src-tauri/tauri.conf.json
+          sed -i "s/^version = \"[0-9.]*\"/version = \"$NEW\"/" src-tauri/Cargo.toml
+          NEW="$NEW" perl -0pi -e 's/(name = "polyview"\nversion = ")[^"]*/$1$ENV{NEW}/' src-tauri/Cargo.lock
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: v$NEW"
+          git tag "v$NEW"
+          git push origin main
+          git push origin "v$NEW"
+
   release:
+    needs: [prepare]
+    # 태그 push 면 prepare 가 skip 되어 needs 결과는 skipped 가 된다. always() 로
+    # 진행하되, dispatch 일 때는 prepare 성공만 통과시킨다.
+    if: always() && (github.event_name == 'push' || needs.prepare.result == 'success')
     strategy:
       fail-fast: false
       matrix:
@@ -32,6 +82,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # dispatch 면 prepare 가 만든 새 태그를, 태그 push 면 그 태그를 체크아웃.
+          ref: ${{ needs.prepare.outputs.tag || github.ref_name }}
 
       - name: Linux 시스템 의존성 설치 (ubuntu 전용)
         if: matrix.platform == 'ubuntu-22.04'
@@ -71,7 +124,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
+          tagName: ${{ needs.prepare.outputs.tag || github.ref_name }}
           releaseName: 'Polyview v__VERSION__'
           releaseBody: |
             다운로드 후 설치하세요. 무서명 빌드라 macOS 는 처음 실행 시
