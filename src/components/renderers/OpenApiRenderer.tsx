@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useEffect, useMemo, useRef } from 'react'
+import { lazy, memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useColorScheme } from '@/lib/theme'
 import '@scalar/api-reference-react/style.css'
 
@@ -38,6 +38,21 @@ function scrollToSection(id: string) {
  */
 export const OpenApiRenderer = memo(function OpenApiRenderer({ content }: { content: string }) {
   const scheme = useColorScheme()
+
+  // 스크롤이 자꾸 맨 위로 튕기는 버그 차단.
+  // Scalar 의 freezeAtTop(@scalar/helpers)은 콘텐츠 셋업 시점 URL 해시가 있으면
+  // document.body 에 MutationObserver 를 걸고, 지연 렌더로 DOM 이 삽입될 때마다
+  // 해시 대상에 scrollIntoView 를 호출한다. 우리는 콘텐츠를 .references-rendered
+  // 에 가둬(중첩 스크롤) 그게 사용자가 스크롤한 위치를 자꾸 맨 위로 되돌린다.
+  // URL 해시 딥링크는 안 쓰므로(스크롤은 onSidebarClick) Scalar 콘텐츠가 (재)셋업
+  // 되기 전에 해시를 비워 freezeAtTop 을 early-exit 시킨다. useLayoutEffect 라
+  // Scalar 의 updateConfiguration(passive effect) 보다 먼저 돈다. MemoryRouter 라
+  // 해시 제거는 라우팅에 영향 없고, replaceState 는 hashchange 도 쏘지 않는다.
+  useLayoutEffect(() => {
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+  }, [content])
 
   // Scalar 는 자기 테마를 document.body 의 .dark-mode/.light-mode 클래스로 칠한다
   // (@scalar/use-hooks 의 useColorMode). 이 클래스를 우리가 직접 토글해 테마를
